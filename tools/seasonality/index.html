@@ -12,6 +12,7 @@
     --ink-1:#0b0b0b; --ink-2:#52514e; --ink-muted:#898781;
     --grid:#e1e0d9; --baseline:#c3c2b7; --border:rgba(11,11,11,.10);
     --series-1:#2a78d6; --series-1-strong:#1c5cab;
+    --series-2:#eb6834; --series-3:#1baf7a; --series-4:#eda100;
     --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
     --accent:#1F4E79;
   }
@@ -22,6 +23,7 @@
       --ink-1:#ffffff; --ink-2:#c3c2b7; --ink-muted:#898781;
       --grid:#2c2c2a; --baseline:#383835; --border:rgba(255,255,255,.10);
       --series-1:#3987e5; --series-1-strong:#6da7ec;
+      --series-2:#d95926; --series-3:#199e70; --series-4:#c98500;
       --accent:#86b6ef;
     }
   }
@@ -48,17 +50,20 @@
           padding: 20px 22px; margin-top: 20px; }
   .card h2 { margin: 0 0 2px; font-size: 17px; }
   .card .meta { color: var(--ink-muted); font-size: 12.5px; margin-bottom: 14px; }
-  .tiles { display: grid; grid-template-columns: repeat(auto-fit,minmax(120px,1fr)); gap: 10px; margin-bottom: 14px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit,minmax(118px,1fr)); gap: 10px; margin-bottom: 14px; }
   .tile { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
-  .tile .k { font-size: 11.5px; color: var(--ink-muted); text-transform: uppercase; letter-spacing:.04em; }
-  .tile .v { font-size: 20px; font-weight: 650; margin-top: 2px; }
-  .tile .h { font-size: 11.5px; color: var(--ink-2); margin-top: 2px; }
+  .tile .k { font-size: 11px; color: var(--ink-muted); text-transform: uppercase; letter-spacing:.04em; }
+  .tile .v { font-size: 19px; font-weight: 650; margin-top: 2px; }
+  .tile .h { font-size: 11px; color: var(--ink-2); margin-top: 2px; }
   .verdict { display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border-radius:10px;
              border:1px solid var(--border); margin-top:8px; font-size:14px; }
   .verdict .dot { flex:0 0 auto; width:10px; height:10px; border-radius:50%; margin-top:6px; }
   .verdict b { margin-right:4px; }
-  .chartbox { margin-top: 16px; position: relative; }
-  .chartbox h3 { font-size: 13px; color: var(--ink-2); margin: 0 0 6px; font-weight:600; }
+  .chartbox { margin-top: 16px; }
+  .chartbox h3 { font-size: 13px; color: var(--ink-2); margin: 0 0 2px; font-weight:600; }
+  .legend { font-size: 11.5px; color: var(--ink-2); margin: 0 0 6px; }
+  .legend span.chip { display:inline-block; width:14px; height:3px; border-radius:2px; vertical-align:middle; margin:0 4px 0 12px; }
+  .legend span.chip.bar { width:10px; height:10px; border-radius:3px; }
   svg text { font: 11px system-ui,-apple-system,"Segoe UI",sans-serif; fill: var(--ink-muted); }
   svg .val { fill: var(--ink-2); font-weight: 600; }
   #tip { position: fixed; pointer-events:none; background: var(--ink-1); color: var(--page);
@@ -75,13 +80,13 @@
 <div class="wrap">
   <header>
     <h1>Seasonality Analyzer <span style="font-size:12px;color:var(--ink-muted);font-weight:400">beta · easestore.de</span></h1>
-    <p class="tag">Drop your Helium&nbsp;10 search-volume history export — get amplitude, ramp month, demand direction and verdicts. No typing.</p>
+    <p class="tag">Drop your Helium&nbsp;10 search-volume history export — get amplitude, ramp month, demand direction, and an honest answer to “is this pattern even real?”. No typing.</p>
     <p class="privacy"><b>Your file never leaves your browser.</b> Everything is computed on your device; nothing is uploaded or stored.</p>
   </header>
 
   <div id="drop">
     <div class="big">Drop the export here <span style="color:var(--ink-muted)">or click to choose a file</span></div>
-    <div class="sub">.csv or .xlsx from Cerebro/Magnet → chart icon → hamburger menu → download. One date column + one column per keyword.</div>
+    <div class="sub">.csv or .xlsx from Cerebro/Magnet → chart icon → “All time” → hamburger menu → download. One date column + one column per keyword. Best with 3 years of data (36 months); minimum 24.</div>
     <button class="btn" id="demo" type="button">Try with example data</button>
     <input type="file" id="file" accept=".csv,.tsv,.txt,.xlsx,.xls">
   </div>
@@ -93,10 +98,10 @@
     <b>How to get the file:</b>
     <ol>
       <li>Helium 10 → Cerebro → <i>Analyze Keywords</i> → marketplace <b>Amazon.de</b> → enter the parent keyword (+ 2–3 children, comma-separated — one search credit).</li>
-      <li>Click the chart icon next to Search Volume → period “All time” → hamburger menu → download.</li>
+      <li>Click the chart icon next to Search Volume → period <b>“All time”</b> (3 years give the most reliable verdicts) → hamburger menu → download.</li>
       <li>Drop it above. Weekly points are averaged per calendar month automatically; the current unfinished month is dropped.</li>
     </ol>
-    Method: classical multiplicative decomposition (Hyndman &amp; Athanasopoulos, otexts.com/fpp3). Educational tool, not financial advice. © EaseStore 2026
+    <b>Method:</b> classical multiplicative decomposition; seasonal strength and year-to-year pattern consistency follow Hyndman &amp; Athanasopoulos, <i>Forecasting: Principles and Practice</i> (otexts.com/fpp3). Thresholds are practitioner heuristics — documented, not hidden. Educational tool, not financial advice. © EaseStore 2026
   </footer>
 </div>
 
@@ -104,6 +109,15 @@
 "use strict";
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const $ = s => document.querySelector(s);
+const mean = a => a.reduce((x,y)=>x+y,0)/a.length;
+const variance = a => { const m = mean(a); return mean(a.map(v=>(v-m)*(v-m))); };
+function pearson(a,b){
+  const ma = mean(a), mb = mean(b);
+  let num=0, da=0, db=0;
+  for (let i=0;i<a.length;i++){ num += (a[i]-ma)*(b[i]-mb); da += (a[i]-ma)**2; db += (b[i]-mb)**2; }
+  const r = num/Math.sqrt(da*db);
+  return isFinite(r) ? r : 0;
+}
 
 /* ---------- parsing ---------- */
 function parseNumber(x){
@@ -116,22 +130,21 @@ function parseNumber(x){
 }
 function parseDateCell(x){
   if (x instanceof Date && !isNaN(x)) return x;
-  if (typeof x === "number" && x > 20000 && x < 70000) {           // Excel serial
+  if (typeof x === "number" && x > 20000 && x < 70000)
     return new Date(Math.round((x - 25569) * 86400 * 1000));
-  }
   if (typeof x !== "string") return null;
   const s = x.trim();
-  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);                  // yyyy-mm-dd
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
   if (m) return new Date(+m[1], +m[2]-1, +m[3]);
-  m = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/);              // dd.mm.yyyy or mm/dd/yyyy
+  m = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/);
   if (m) {
     const a = +m[1], b = +m[2], y = +m[3];
-    if (s.includes(".")) return new Date(y, b-1, a);                // German dd.mm.yyyy
-    return new Date(y, a-1, b);                                     // US mm/dd/yyyy
+    if (s.includes(".")) return new Date(y, b-1, a);
+    return new Date(y, a-1, b);
   }
-  m = s.match(/^([A-Za-z]{3,})\s+(\d{1,2}),?\s+(\d{4})$/);          // Aug 4, 2025
+  m = s.match(/^([A-Za-z]{3,})\s+(\d{1,2}),?\s+(\d{4})$/);
   if (m) { const d = new Date(s); return isNaN(d) ? null : d; }
-  m = s.match(/^(\d{4})-(\d{1,2})$/);                               // yyyy-mm
+  m = s.match(/^(\d{4})-(\d{1,2})$/);
   if (m) return new Date(+m[1], +m[2]-1, 15);
   return null;
 }
@@ -162,7 +175,6 @@ async function fileToRows(file){
 /* ---------- analysis ---------- */
 function analyzeRows(rows){
   if (!rows || rows.length < 3) throw new Error("Could not read any rows from the file.");
-  // find date column = column with most date-parseable cells
   const nCols = Math.max(...rows.map(r=>r.length));
   let dateCol = -1, best = 0;
   for (let c=0; c<nCols; c++){
@@ -172,7 +184,6 @@ function analyzeRows(rows){
   if (dateCol < 0 || best < 3) throw new Error("No date column found. The export needs one column with dates.");
   const headerRow = parseDateCell(rows[0][dateCol]) ? null : rows[0];
   const body = headerRow ? rows.slice(1) : rows;
-  // series columns = mostly-numeric non-date columns
   const series = [];
   for (let c=0; c<nCols; c++){
     if (c === dateCol) continue;
@@ -181,7 +192,6 @@ function analyzeRows(rows){
       series.push({ col:c, name: headerRow && headerRow[c] ? String(headerRow[c]) : "Keyword "+(series.length+1) });
   }
   if (!series.length) throw new Error("No keyword columns with numbers found next to the date column.");
-  // aggregate weekly points -> monthly means
   const now = new Date(); const curKey = now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
   return series.map(s=>{
     const acc = new Map();
@@ -189,32 +199,81 @@ function analyzeRows(rows){
       const d = parseDateCell(r[dateCol]); const v = parseNumber(r[s.col]);
       if (!d || v == null) continue;
       const key = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
-      if (key === curKey) continue;                                  // drop unfinished current month
+      if (key === curKey) continue;
       const a = acc.get(key) || { sum:0, n:0 }; a.sum += v; a.n++; acc.set(key, a);
     }
     let months = [...acc.entries()].map(([k,a])=>({ key:k, ym:k.split("-").map(Number), avg:a.sum/a.n }))
                                    .sort((a,b)=>a.key<b.key?-1:1);
-    if (months.length > 24) months = months.slice(-24);
+    if (months.length > 36) months = months.slice(-36);
     return computeStats(s.name, months);
   });
 }
+
+function yearBlocks(months){
+  // consecutive 12-month blocks counted back from the newest month; each covers every calendar month once
+  const n = months.length, k = Math.min(3, Math.floor(n/12));
+  const blocks = [];
+  for (let j=k-1; j>=0; j--){                       // oldest first
+    const seg = months.slice(n-12*(j+1), n-12*j);
+    const vec = new Array(12).fill(null);
+    for (const m of seg) vec[m.ym[1]-1] = m.avg;
+    const yy = y => String(y).slice(2);
+    blocks.push({ seg, vec, label: seg[0].ym[0]===seg[11].ym[0] ? "’"+yy(seg[0].ym[0])
+                        : "’"+yy(seg[0].ym[0])+"–"+yy(seg[11].ym[0]) });
+  }
+  return blocks;
+}
+
 function computeStats(name, months){
   const prof = Array.from({length:12},()=>({sum:0,n:0}));
   for (const m of months){ const i = m.ym[1]-1; prof[i].sum += m.avg; prof[i].n++; }
   const profAvg = prof.map(p=>p.n? p.sum/p.n : null);
   const filled = profAvg.filter(v=>v!=null);
-  const mean = filled.reduce((a,b)=>a+b,0) / (filled.length||1);
-  const index = profAvg.map(v=>v==null? null : v/mean);
+  const grand = mean(filled);
+  const index = profAvg.map(v=>v==null? null : v/grand);
   const nz = index.filter(v=>v!=null && v>0);
   const amp = nz.length ? Math.max(...nz)/Math.min(...nz) : null;
   const sorted = [...filled].sort((a,b)=>b-a);
   const top4 = filled.length>=4 ? sorted.slice(0,4).reduce((a,b)=>a+b,0)/filled.reduce((a,b)=>a+b,0) : null;
-  let yoy = null;
-  if (months.length >= 24){
-    const y1 = months.slice(0,12).reduce((a,m)=>a+m.avg,0);
-    const y2 = months.slice(12).reduce((a,m)=>a+m.avg,0);
-    if (y1>0) yoy = y2/y1-1;
+
+  const blocks = yearBlocks(months);
+
+  // YoY: newest block vs the one before (block totals)
+  let yoy = null, yoyPrev = null;
+  if (blocks.length >= 2){
+    const tot = b => b.seg.reduce((a,m)=>a+m.avg,0);
+    const t = blocks.map(tot);
+    if (t[blocks.length-2] > 0) yoy = t[blocks.length-1]/t[blocks.length-2] - 1;
+    if (blocks.length === 3 && t[0] > 0) yoyPrev = t[1]/t[0] - 1;
   }
+
+  // Pattern consistency: mean pairwise Pearson correlation of log monthly vectors
+  let consistency = null;
+  if (blocks.length >= 2){
+    const logs = blocks.map(b => b.vec.map(v => Math.log((v??0)+1)));
+    const rs = [];
+    for (let i=0;i<logs.length;i++) for (let j=i+1;j<logs.length;j++) rs.push(pearson(logs[i],logs[j]));
+    consistency = mean(rs);
+  }
+
+  // Seasonal strength (Hyndman): log series, centered MA-12 detrend, F_s = max(0, 1 - Var(R)/Var(detrended))
+  let strength = null;
+  if (months.length >= 30){
+    const y = months.map(m => Math.log(m.avg + 1));
+    const d = [], calm = [];
+    for (let t=6; t<=y.length-7; t++){
+      let s = 0.5*y[t-6] + 0.5*y[t+6];
+      for (let u=t-5; u<=t+5; u++) s += y[u];
+      d.push(y[t] - s/12); calm.push(months[t].ym[1]-1);
+    }
+    const sm = Array.from({length:12},()=>({sum:0,n:0}));
+    d.forEach((v,i)=>{ sm[calm[i]].sum += v; sm[calm[i]].n++; });
+    const smv = sm.map(p=>p.n? p.sum/p.n : 0);
+    const rem = d.map((v,i)=> v - smv[calm[i]]);
+    const vd = variance(d);
+    if (vd > 1e-12) strength = Math.max(0, 1 - variance(rem)/vd);
+  }
+
   let ramp = null;
   for (let i=0;i<12;i++){
     const prev = index[(i+11)%12], cur = index[i];
@@ -222,23 +281,38 @@ function computeStats(name, months){
   }
   const peak = index.indexOf(Math.max(...index.map(v=>v??-1)));
   const low  = index.indexOf(Math.min(...index.map(v=>v??1e9)));
-  return { name, months, index, profAvg, amp, top4, yoy, ramp, peak, low,
+  return { name, months, blocks, index, profAvg, amp, top4, yoy, yoyPrev, consistency, strength, ramp, peak, low,
            calMonths: filled.length, zeroMonths: filled.filter(v=>v===0).length };
 }
+
+/* ---------- verdicts ---------- */
+function reliabilityVerdict(r){
+  if (r.calMonths < 12) return ["warning","INCOMPLETE","Only "+r.calMonths+" of 12 calendar months covered — nothing here is reliable yet."];
+  if (r.months.length < 24) return ["warning","ONE YEAR ONLY","With under 24 months, season and noise cannot be separated. Re-export with the period set to All time."];
+  const c = r.consistency, cs = c.toFixed(2);
+  const st = r.strength==null ? "" : " Seasonal strength "+r.strength.toFixed(2)+" agrees.";
+  if (c >= 0.7) return ["good","PATTERN IS REAL","The years agree with each other (consistency "+cs+") — trust the shape below."+st];
+  if (c >= 0.4) return ["warning","PATTERN UNCERTAIN","The years only partly agree (consistency "+cs+"). Verify the shape on Google Trends (DE, 5y) and Product Opportunity Explorer before timing an order."];
+  return ["critical","NO RELIABLE PATTERN","The years disagree (consistency "+cs+") — the ups and downs are mostly noise, and the amplitude number is not meaningful. Treat demand as flat."];
+}
 function seasonVerdict(r){
-  if (r.calMonths < 12) return ["warning","INCOMPLETE","Only "+r.calMonths+" of 12 calendar months have data — verdict not reliable yet."];
+  if (r.calMonths < 12) return ["warning","INCOMPLETE","Fill a full year of data first."];
   if (r.zeroMonths > 0)  return ["critical","EXTREME","A zero-demand month: extreme single-season. Avoid as a first product."];
+  if (r.amp < 1.3)  return ["good","FLAT","Essentially flat demand. Order timing is not critical."];
+  if (r.consistency != null && r.consistency < 0.4)
+    return ["warning","TREAT AS FLAT","Amplitude "+r.amp.toFixed(2)+"× looks seasonal, but the years disagree — likely noise. Do not time orders on this."];
   if (r.amp < 1.5)  return ["good","FLAT","Flat demand. Order timing is not critical."];
   if (r.amp < 2.5)  return ["good","MODERATE","Moderate seasonality. Time the order, but sales run all year."];
   if (r.amp < 4)    return ["warning","STRONG","Strong seasonality. Stock must land 4 weeks before the ramp; exit the peak lean."];
   return ["critical","SINGLE-SEASON","A working-capital trap for a first product."];
 }
 function directionVerdict(r){
-  if (r.yoy == null) return ["warning","NO YoY","Fewer than 24 months of data — direction unknown. Check Google Trends (DE, 5 years)."];
-  if (r.yoy > 0.05)   return ["good","GROWING","+"+(r.yoy*100).toFixed(1)+"% YoY. Check it isn’t one viral ASIN: is page-1 revenue spread across many listings?"];
-  if (r.yoy >= -0.05) return ["good","FLAT",(r.yoy*100).toFixed(1)+"% YoY. Fine for entry — win by taking share."];
-  if (r.yoy >= -0.15) return ["warning","COOLING",(r.yoy*100).toFixed(1)+"% YoY. Google Trends DE, 5 years: plateau = ok; steady slide = drop. Compare the traditional synonym too."];
-  return ["critical","DECLINING",(r.yoy*100).toFixed(1)+"% YoY. Drop unless Trends shows a clearly temporary dip."];
+  if (r.yoy == null) return ["warning","NO YoY","Fewer than 24 months — direction unknown. Check Google Trends (DE, 5 years)."];
+  const p = (r.yoy*100).toFixed(1)+"% YoY", prev = r.yoyPrev==null ? "" : " (prior year "+(r.yoyPrev>0?"+":"")+(r.yoyPrev*100).toFixed(1)+"%)";
+  if (r.yoy > 0.05)   return ["good","GROWING","+"+p+prev+". Check it isn’t one viral ASIN: is page-1 revenue spread across many listings?"];
+  if (r.yoy >= -0.05) return ["good","FLAT",p+prev+". Fine for entry — win by taking share."];
+  if (r.yoy >= -0.15) return ["warning","COOLING",p+prev+". Google Trends DE, 5 years: plateau = ok; steady slide = drop. Compare the traditional synonym too."];
+  return ["critical","DECLINING",p+prev+". Drop unless Trends shows a clearly temporary dip."];
 }
 
 /* ---------- rendering ---------- */
@@ -249,17 +323,24 @@ function verdictHTML(v){
   const icon = {good:"✓",warning:"▲",critical:"✖",serious:"▲"}[v[0]];
   return `<div class="verdict"><span class="dot" style="background:${col}"></span><div><b>${icon} ${v[1]}</b> ${v[2]}</div></div>`;
 }
+const YEAR_COLORS = ["var(--series-2)","var(--series-3)","var(--series-4)"];
 function chartSVG(r){
-  const W=760, H=210, padL=34, padB=26, padT=18;
+  const W=760, H=220, padL=34, padB=26, padT=18;
   const iw = W-padL-8, ih = H-padT-padB;
-  const maxI = Math.max(1.15, ...r.index.map(v=>v??0)) * 1.12;
+  // per-year normalized monthly indexes for overlay lines
+  const yearIdx = r.blocks.map(b=>{
+    const vals = b.vec.filter(v=>v!=null);
+    const m = vals.length ? mean(vals) : 1;
+    return b.vec.map(v=>v==null? null : v/m);
+  });
+  const allVals = [...r.index, ...yearIdx.flat()].filter(v=>v!=null);
+  const maxI = Math.max(1.15, ...allVals) * 1.1;
   const y = v => padT + ih*(1 - v/maxI);
   const bw = iw/12;
-  let bars = "", labels = "";
+  let bars = "", lines = "", labels = "";
   for (let i=0;i<12;i++){
     const v = r.index[i];
-    const x = padL + i*bw + 1;                       // 2px gap between bars
-    const w = bw - 2;
+    const x = padL + i*bw + 1, w = bw - 2;
     if (v != null){
       const top = y(v), h = (padT+ih)-top, rr = Math.min(4, h/2, w/2);
       const hl = i===r.peak;
@@ -270,38 +351,47 @@ function chartSVG(r){
     const bold = i===r.ramp;
     labels += `<text x="${x+w/2}" y="${H-8}" text-anchor="middle" ${bold?'class="val"':''}>${MONTHS[i]}${bold?" ↑":""}</text>`;
   }
+  yearIdx.forEach((yi, bi)=>{
+    const pts = [];
+    for (let i=0;i<12;i++) if (yi[i]!=null) pts.push((padL + i*bw + bw/2).toFixed(1)+","+y(yi[i]).toFixed(1));
+    if (pts.length>1) lines += `<polyline points="${pts.join(" ")}" fill="none" stroke="${YEAR_COLORS[bi]}" stroke-width="2" stroke-linejoin="round" opacity="0.9"/>`;
+  });
   const b1 = y(1);
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Seasonality index by month for ${r.name}">
     <line x1="${padL}" y1="${padT+ih}" x2="${W-8}" y2="${padT+ih}" stroke="var(--baseline)" stroke-width="1"/>
     <line x1="${padL}" y1="${b1}" x2="${W-8}" y2="${b1}" stroke="var(--grid)" stroke-width="1" stroke-dasharray="4 3"/>
     <text x="${padL-4}" y="${b1+4}" text-anchor="end">1.00</text>
-    ${bars}${labels}
+    ${bars}${lines}${labels}
   </svg>`;
 }
 function render(results){
   const out = $("#out"); out.innerHTML = "";
   for (const r of results){
-    const sv = seasonVerdict(r), dv = directionVerdict(r);
+    const rv = reliabilityVerdict(r), sv = seasonVerdict(r), dv = directionVerdict(r);
     const first = r.months[0]?.key || "", last = r.months[r.months.length-1]?.key || "";
+    const legend = `<span class="chip bar" style="background:var(--series-1)"></span> average index (bars)` +
+      r.blocks.map((b,i)=>`<span class="chip" style="background:${YEAR_COLORS[i]}"></span> ${b.label}`).join("");
     const card = document.createElement("div"); card.className = "card";
     card.innerHTML = `
       <h2>${r.name}</h2>
-      <div class="meta">${r.months.length} complete months used (${first} → ${last}) · weekly points averaged per calendar month · current month dropped</div>
+      <div class="meta">${r.months.length} complete months used (${first} → ${last}) · ${r.blocks.length} year${r.blocks.length>1?"s":""} compared · weekly points averaged per calendar month · current month dropped</div>
       <div class="tiles">
         ${tile("Amplitude", fmt(r.amp), "peak ÷ lowest month")}
+        ${tile("Consistency", r.consistency==null?"—":fmt(r.consistency), "do the years agree? (−1…1)")}
+        ${tile("Seasonal strength", r.strength==null?"needs 3 yrs":fmt(r.strength), "seasonal share of variation (0–1)")}
         ${tile("Top-4 share", r.top4==null?"—":(r.top4*100).toFixed(1)+"%", ">60% = 4-month business")}
         ${tile("YoY", r.yoy==null?"—":(r.yoy>0?"+":"")+(r.yoy*100).toFixed(1)+"%", "last 12 vs previous 12")}
         ${tile("Ramp month", r.ramp==null?"—":MONTHS[r.ramp], "stock lands 4 weeks earlier")}
-        ${tile("Peak / low", MONTHS[r.peak]+" / "+MONTHS[r.low], "shape of the year")}
       </div>
+      ${verdictHTML(rv)}
       ${verdictHTML(sv)}
       ${verdictHTML(dv)}
-      <div class="chartbox"><h3>Seasonality index by month (1.00 = average month)</h3>${chartSVG(r)}</div>
+      <div class="chartbox"><h3>Seasonality index by month (1.00 = average month)</h3>
+      <div class="legend">${legend}</div>${chartSVG(r)}</div>
       <details><summary>Data table</summary><table><tr><th>Month</th><th>Avg volume</th><th>Index</th></tr>
         ${MONTHS.map((m,i)=>`<tr><td>${m}</td><td>${r.profAvg[i]==null?"—":Math.round(r.profAvg[i]).toLocaleString("en-US")}</td><td>${r.index[i]==null?"—":r.index[i].toFixed(2)}</td></tr>`).join("")}
       </table></details>`;
     out.appendChild(card);
-    // hover tooltips
     card.querySelectorAll(".bar").forEach(b=>{
       b.addEventListener("mousemove", e=>{
         const i = +b.dataset.i, tip = $("#tip");
@@ -331,14 +421,18 @@ $("#file").addEventListener("change", e => e.target.files[0] && handle(e.target.
 drop.addEventListener("drop", e => e.dataTransfer.files[0] && handle(e.dataTransfer.files[0]));
 $("#demo").addEventListener("click", e => {
   e.stopPropagation();
-  const monthly = [10348,11120,11735,11100,10314,15408,15404,12974,11777,9802,9083,9830,
-                   10198,9675,10628,10244,9772,17117,14402,12257,10966,7284,6866,7096];   // chronological: Aug 2024 → Jul 2026
+  // 36 months, chronological Aug 2023 -> Jul 2026 (kueche-style example)
+  const y1cal = [15408,15404,12974,11777,9802,9083,9830,10348,11120,11735,11100,10314]; // Jan..Dec calendar values, window year 1
+  const yr0 = [...y1cal.slice(7), ...y1cal.slice(0,7)].map(v=>Math.round(v*0.94));      // Aug23..Jul24
+  const yr1 = [10348,11120,11735,11100,10314,15408,15404,12974,11777,9802,9083,9830];   // Aug24..Jul25
+  const yr2 = [10198,9675,10628,10244,9772,17117,14402,12257,10966,7284,6866,7096];     // Aug25..Jul26
+  const monthly = [...yr0, ...yr1, ...yr2];
   let csv = "Date,schubladen organizer küche (example)\n";
-  const start = new Date(2024, 7, 7);                       // Aug 2024, weekly points
-  let mi = 0, d = new Date(start);
-  while (mi < 24){
-    const key = d.getFullYear()*12+d.getMonth(), k0 = start.getFullYear()*12+start.getMonth();
-    mi = key - k0; if (mi >= 24) break;
+  const start = new Date(2023, 7, 7);
+  let d = new Date(start);
+  while (true){
+    const mi = (d.getFullYear()*12+d.getMonth()) - (start.getFullYear()*12+start.getMonth());
+    if (mi >= 36) break;
     csv += d.toISOString().slice(0,10) + "," + monthly[mi] + "\n";
     d.setDate(d.getDate()+7);
   }
