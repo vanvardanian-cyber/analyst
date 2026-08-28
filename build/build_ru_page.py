@@ -15,8 +15,8 @@ t('<html lang="en">', '<html lang="ru">')
 t('<title>EaseStore · Niche Funnel</title>', '<title>EaseStore · Воронка ниш</title>')
 t('<h1>Niche Funnel <span style="font-size:12px;color:var(--ink-muted);font-weight:400">beta · easestore.de</span> <a href="ru/" style="font-size:12px;font-weight:400;color:var(--series-1);margin-left:8px">RU</a></h1>',
   '<h1>Воронка ниш <span style="font-size:12px;color:var(--ink-muted);font-weight:400">beta · easestore.de</span> <a href="../" style="font-size:12px;font-weight:400;color:var(--series-1);margin-left:8px">EN</a></h1>')
-t('<p class="tag">Four gates, in order: is demand real and rising → can you win the page → does a unit earn enough → which keyword opens the door. Drop the Helium&nbsp;10 exports, get honest verdicts. A yellow or red gate never blocks you — it tells you what you are accepting if you continue.</p>',
-  '<p class="tag">Четыре этапа по порядку: спрос реален и растёт → можно ли выиграть страницу → зарабатывает ли юнит достаточно → какой ключ открывает дверь. Бросьте экспорты Helium&nbsp;10 — получите честные вердикты. Жёлтый или красный этап никогда не блокирует: он говорит, что именно вы принимаете, если идёте дальше.</p>')
+t('<p class="tag">Five gates, in order: may you legally sell it at all → is demand real and rising → can you win the page → does a unit earn enough → which keyword opens the door. Gate 0 needs no files; the rest take the Helium&nbsp;10 exports. A yellow or red gate never blocks you — it tells you what you are accepting if you continue.</p>',
+  '<p class="tag">Пять этапов по порядку: можно ли это вообще законно продавать → спрос реален и растёт → можно ли выиграть страницу → зарабатывает ли юнит достаточно → какой ключ открывает дверь. Этапу 0 файлы не нужны; остальным нужны экспорты Helium&nbsp;10. Жёлтый или красный этап никогда не блокирует: он говорит, что именно вы принимаете, если идёте дальше.</p>')
 t('<b>Your files never leave your browser.</b> Everything is computed on your device; nothing is uploaded or stored.',
   '<b>Ваши файлы не покидают браузер.</b> Всё считается на вашем устройстве; ничего не загружается и не хранится.')
 
@@ -25,6 +25,85 @@ t('<b>1</b>&nbsp;Seasonality &amp; direction', '<b>1</b>&nbsp;Сезонност
 t('<b>2</b>&nbsp;Competition (Xray)', '<b>2</b>&nbsp;Конкуренция (Xray)')
 t('<b>3</b>&nbsp;Unit economics', '<b>3</b>&nbsp;Юнит-экономика')
 t('<b>4</b>&nbsp;Keywords &amp; launch cost', '<b>4</b>&nbsp;Ключи и цена запуска')
+
+t('g.querySelector(".gchip").textContent = "not run";', 'g.querySelector(".gchip").textContent = "не запускался";')
+# ---------- gate 0 (kill questions) ----------
+t('<b>0</b>&nbsp;Kill questions', '<b>0</b>&nbsp;Вопросы-убийцы')
+t('Gate 0 — Kill questions <span class="gchip">not run</span>',
+  'Этап 0 — Вопросы-убийцы <span class="gchip">не запускался</span>')
+t('<p class="gsub">No files, about 30 seconds. The nine compliance exclusions from the workbook (Sheet 4, Block A) plus one brand question. Answer these before you spend a Helium&nbsp;10 search credit — they kill a niche faster than any data can.</p>',
+  '<p class="gsub">Без файлов, около 30 секунд. Девять комплаенс-исключений из книги (Лист 4, Блок A) плюс один вопрос про бренд. Ответьте на них прежде, чем тратить поисковый кредит Helium&nbsp;10 — они убивают нишу быстрее любых данных.</p>')
+t('<h4 class="qhead">Product properties</h4>', '<h4 class="qhead">Свойства продукта</h4>')
+t('<p class="qwhy">A NO here is a property of the product itself. No amount of paperwork changes it — the answer is a different product.</p>',
+  '<p class="qwhy">НЕТ здесь — свойство самого продукта. Никакие бумаги этого не меняют: ответ — другой продукт.</p>')
+t('<h4 class="qhead">Seller duties</h4>', '<h4 class="qhead">Обязанности продавца</h4>')
+t('<p class="qwhy">A NO here is a task with a cost and a deadline, not a dead niche. These apply to every consumer product you will ever sell, so they cannot tell one niche from another.</p>',
+  '<p class="qwhy">НЕТ здесь — это задача со стоимостью и сроком, а не мёртвая ниша. Они касаются любого потребительского товара, который вы когда-либо продадите, поэтому не отличают одну нишу от другой.</p>')
+t('<h4 class="qhead">Brand</h4>', '<h4 class="qhead">Бренд</h4>')
+t('<p class="qwhy">Not in the workbook — it decides whether this is a product or the start of a brand.</p>',
+  '<p class="qwhy">В книге этого нет — вопрос решает, товар это или начало бренда.</p>')
+t('<button class="btn" id="g0reset" type="button">Clear answers</button>',
+  '<button class="btn" id="g0reset" type="button">Сбросить ответы</button>')
+t('<button type="button" data-v="yes">Yes</button><button type="button" data-v="no">No</button>',
+  '<button type="button" data-v="yes">Да</button><button type="button" data-v="no">Нет</button>')
+
+# question texts + why
+t('text:"Not worn for body protection (EU PPE Regulation 2016/425)"',
+  'text:"Не надевается на тело для защиты (Регламент ЕС по СИЗ 2016/425)"')
+t('why:"Helmets, harnesses, goggles, gloves, hi-vis. Cat II needs a notified body." }',
+  'why:"Каски, страховочные системы, очки, перчатки, светоотражающая одежда. Категория II требует нотифицированного органа." }')
+t('text:"No battery, plug, motor or LED"', 'text:"Нет батареи, вилки, мотора или светодиода"')
+t('why:"Triggers LVD, EMC, RoHS, WEEE, BattG." }', 'why:"Включает LVD, EMC, RoHS, WEEE, BattG." }')
+t('text:"Not intended for children under 14"', 'text:"Не предназначено для детей до 14 лет"')
+t('why:"Toy Safety Directive 2009/48/EC." }', 'why:"Директива по безопасности игрушек 2009/48/EC." }')
+t('text:"No contact with food, drink or skin"', 'text:"Нет контакта с едой, напитками или кожей"')
+t('why:"LFGB, cosmetics regulation, migration tests." }', 'why:"LFGB, регламент по косметике, тесты на миграцию." }')
+t('text:"No medical, health or veterinary claims"', 'text:"Нет медицинских, оздоровительных или ветеринарных заявлений"')
+t('why:"MDR, health-claims rules. The claim is what regulates you, not the object." }',
+  'why:"MDR, правила о заявлениях о пользе для здоровья. Регулирует вас заявление, а не сам предмет." }')
+t('text:"Nothing load-bearing, nothing that arrests a fall"', 'text:"Ничего несущего, ничего останавливающего падение"')
+t('why:"The PPE trap under another name." }', 'why:"Ловушка СИЗ под другим названием." }')
+t('text:"No blocking IP: designs, patents, trademarks checked"',
+  'text:"Нет блокирующей интеллектуальной собственности: промдизайны, патенты, товарные знаки проверены"')
+t('why:"EUIPO eSearch, DPMA register, Google Patents. Design infringement is the #1 private-label account killer in DE. Answer NO if you found blocking IP — and also if you simply have not looked yet." }',
+  'why:"EUIPO eSearch, реестр DPMA, Google Patents. Нарушение промдизайна — убийца №1 аккаунтов частных марок в Германии. Отвечайте НЕТ, если нашли блокирующие права — и так же, если просто ещё не смотрели." }')
+t('text:"EU Responsible Person appointed (GPSR)"', 'text:"Назначено Ответственное лицо в ЕС (GPSR)"')
+t('why:"Mandatory for a non-EU seller on any consumer product." }',
+  'why:"Обязательно для продавца вне ЕС на любой потребительский товар." }')
+t('text:"Packaging EPR done: LUCID + PPWR authorised representative"',
+  'text:"Упаковочный EPR сделан: LUCID + уполномоченный представитель PPWR"')
+t('why:"LUCID mandatory since 2022; the PPWR authorised-representative duty applies since 12 Aug 2026." }',
+  'why:"LUCID обязателен с 2022; обязанность по уполномоченному представителю PPWR действует с 12 августа 2026." }')
+t('text:"A happy buyer would plausibly buy a second, related product from this brand within a year"',
+  'text:"Довольный покупатель правдоподобно купит у этого бренда второй, смежный товар в течение года"')
+t('why:"If every sale has to be bought with advertising and nobody ever comes back, you own a product, not a brand — and the launch cost repeats forever." }',
+  'why:"Если каждую продажу приходится покупать рекламой и никто не возвращается, у вас товар, а не бренд — и цена запуска повторяется вечно." }')
+
+# progress line + verdicts
+t('answered.length + " of " + G0Q.length + " answered · workbook Sheet 4 Block A tally: "',
+  'answered.length + " из " + G0Q.length + " отвечено · подсчёт Блока A, Лист 4 книги: "')
+t('+ blockAyes + "/9 YES" + (blockAyes===9 ? " — CLEAN" : answered.length===G0Q.length ? " — REJECT" : "");',
+  '+ blockAyes + "/9 ДА" + (blockAyes===9 ? " — ЧИСТО" : answered.length===G0Q.length ? " — ОТКАЗ" : "");')
+t('const names = qs => qs.map(q=>"“"+q.text+"”").join(", ");',
+  'const names = qs => qs.map(q=>"«"+q.text+"»").join(", ");')
+t('v = ["critical","REGULATED — CHANGE THE PRODUCT",\n      "Failed: "+names(failA)+". Sheet 4 treats any NO in Block A as an automatic reject, and these rows are properties of the object: a helmet does not stop being PPE because the margin is good. The compliance bill (notified body, testing, technical file) lands before your first sale and is written for volumes you do not have yet."',
+  'v = ["critical","РЕГУЛИРУЕМЫЙ ТОВАР — МЕНЯЙТЕ ПРОДУКТ",\n      "Провалено: "+names(failA)+". Лист 4 считает любое НЕТ в Блоке A автоматическим отказом, а эти строки — свойства самого предмета: каска не перестаёт быть СИЗ из-за хорошей маржи. Счёт за комплаенс (нотифицированный орган, испытания, техническое досье) приходит до первой продажи и рассчитан на объёмы, которых у вас пока нет."')
+t('+ (failA.some(q=>q.id==="ip") ? " On the IP row: if the answer is NO because you have not checked, check first — EUIPO eSearch, DPMA register, Google Patents — this one may still clear. If you found blocking IP, it will not." : "")];',
+  '+ (failA.some(q=>q.id==="ip") ? " По строке про права: если НЕТ потому, что вы не проверяли — сначала проверьте (EUIPO eSearch, реестр DPMA, Google Patents), эта строка ещё может закрыться. Если вы нашли блокирующие права — не закроется." : "")];')
+t('if (failB.length) bits.push("Outstanding seller setup: "+names(failB)+". One-off, priced in hundreds of euros, and it applies to every product you will ever list — do it before you order stock, not before you research. It does not tell you anything about this niche, which is why it is yellow here and a NO in the tally above.");',
+  'if (failB.length) bits.push("Незакрытая настройка продавца: "+names(failB)+". Разовая, стоит сотни евро и касается любого товара, который вы когда-либо выставите — сделайте до заказа партии, а не до исследования. О самой нише это ничего не говорит, поэтому здесь жёлтый, а в подсчёте выше — НЕТ.");')
+t('if (failBrand) bits.push("No repeat purchase: every sale has to be bought with advertising, forever, and the launch cost never amortises across a second product. Workable as a first cash-flow product; a poor foundation for a brand.");',
+  'if (failBrand) bits.push("Повторной покупки нет: каждую продажу придётся покупать рекламой, всегда, и цена запуска никогда не распределится на второй товар. Как первый товар ради денежного потока — рабочий вариант; как фундамент бренда — плохой.");')
+t('v = ["warning","CLEAR TO RESEARCH, WITH OPEN ITEMS", bits.join(" ")];',
+  'v = ["warning","ИССЛЕДОВАТЬ МОЖНО, НО ЕСТЬ ОТКРЫТЫЕ ПУНКТЫ", bits.join(" ")];')
+t('v = ["good","CLEAN","Nothing here kills the niche: no regulated-product exclusion, seller duties in place, and a buyer who might come back for a second product. Now find out whether anyone wants it — Gate 1."];',
+  'v = ["good","ЧИСТО","Здесь нишу ничто не убивает: исключений по регулируемым товарам нет, обязанности продавца закрыты, покупатель может вернуться за вторым товаром. Теперь выясните, нужно ли это кому-нибудь — Этап 1."];')
+
+# footer
+t('<li><b>Gate 0:</b> no file. Answer from what you already know about the product; if you cannot answer one honestly yet, that is the first thing to go and find out.</li>',
+  '<li><b>Этап 0:</b> файла нет. Отвечайте из того, что уже знаете о продукте; если на какой-то вопрос честно ответить пока нельзя — вот это и надо выяснить первым делом.</li>')
+t('<b>Gate 0 thresholds:</b> the nine rows are workbook Sheet 4 Block A verbatim, where any NO is an automatic reject. This page splits them: the seven product-property rows stay a red kill, while the two seller-duty rows (EU Responsible Person under GPSR, packaging EPR via LUCID + PPWR authorised representative) are shown yellow. Reason: those two are seller-level obligations that attach to every consumer product, so as a niche filter they would reject every niche equally — they carry no information about this niche. They are still shown as NO in the Block A tally, which is printed unchanged next to the verdict. The brand question is not in the workbook.',
+  '<b>Пороги Этапа 0:</b> девять строк — это дословно Блок A Листа 4 книги, где любое НЕТ означает автоматический отказ. Эта страница их разделяет: семь строк о свойствах продукта остаются красным приговором, а две строки об обязанностях продавца (Ответственное лицо в ЕС по GPSR, упаковочный EPR через LUCID + уполномоченного представителя PPWR) показываются жёлтым. Причина: эти две — обязанности уровня продавца, привязанные к любому потребительскому товару, поэтому как фильтр ниш они отклонили бы все ниши одинаково — информации об этой нише в них нет. В подсчёте Блока A они по-прежнему считаются как НЕТ, и этот подсчёт печатается рядом с вердиктом без изменений. Вопроса про бренд в книге нет.')
 
 # ---------- gate 1 ----------
 t('Gate 1 — Seasonality &amp; direction <span class="gchip">not run</span>',

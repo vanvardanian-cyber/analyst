@@ -56,6 +56,35 @@ def same(label, a, b):
 
 en = page["en"]
 
+# ---- Gate 0: the nine Block A rows must be present, in the right groups,
+#      and every answer scenario must land on the status the mirror predicts.
+g0, m0 = en["gate0"], mir["gate0"]
+EXPECTED_ROWS = [("ppe", "q0a"), ("elec", "q0a"), ("kids", "q0a"), ("skin", "q0a"),
+                 ("health", "q0a"), ("load", "q0a"), ("ip", "q0a"),
+                 ("gpsr", "q0b"), ("epr", "q0b"), ("brand", "q0c")]
+same("G0 question count", len(g0["questions"]), len(EXPECTED_ROWS))
+same("G0 rows and groups", [(q["id"], q["group"]) for q in g0["questions"]], EXPECTED_ROWS)
+same("G0 Block A row count (workbook Sheet 4 C5:C13)",
+     sum(1 for q in g0["questions"] if q["group"] in ("q0a", "q0b")), 9)
+for name, exp in m0.items():
+    run = en["gate0Runs"][name]
+    same(f"G0 [{name}] status",   run["status"],   exp["status"])
+    same(f"G0 [{name}] tally",    run["progress"], exp["progress"])
+    if exp["status"] is None:
+        same(f"G0 [{name}] chip stays unrun", run["chip"].lower(), "not run")
+        same(f"G0 [{name}] no verdict shown", run["headline"], None)
+    else:
+        ok = bool(run["headline"])
+        checks.append((ok, f"G0 [{name}] verdict shown", run["headline"], "a headline"))
+        if not ok:
+            fails.append(f"G0 [{name}] verdict shown: nothing rendered")
+        # a red gate must still not block: the hint always offers the next gate
+        if run["status"] == "red":
+            ok2 = "Gate 1" in run["hint"]
+            checks.append((ok2, f"G0 [{name}] red does not hard-block", run["hint"], "mentions Gate 1"))
+            if not ok2:
+                fails.append(f"G0 [{name}] red hint does not point on to Gate 1")
+
 # ---- Gate 1
 g1, m1 = en["gate1"], mir["gate1"]
 eq("G1 amplitude",        g1["tiles"].get("Amplitude"),         round(m1["amplitude"], 2))
@@ -109,6 +138,12 @@ for gate in ("gate1", "gate2", "gate3", "gate4"):
         if a is not None or b is not None:
             same(f"RU {gate}: {ek} value", b, a)
     same(f"RU {gate}: status", ru[gate]["status"], en[gate]["status"])
+same("RU gate0: question count", len(ru["gate0"]["questions"]), len(en["gate0"]["questions"]))
+same("RU gate0: rows and groups",
+     [(q["id"], q["group"]) for q in ru["gate0"]["questions"]],
+     [(q["id"], q["group"]) for q in en["gate0"]["questions"]])
+for name in mir["gate0"]:
+    same(f"RU G0 [{name}] status", ru["gate0Runs"][name]["status"], en["gate0Runs"][name]["status"])
 same("RU check-row count (gate 2)", len(ru["gate2"]["checks"]), len(en["gate2"]["checks"]))
 same("RU check-row count (gate 4)", len(ru["gate4"]["checks"]), len(en["gate4"]["checks"]))
 

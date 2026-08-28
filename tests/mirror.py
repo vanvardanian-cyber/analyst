@@ -32,6 +32,54 @@ def pvar(a):
     return statistics.fmean([(v - m) ** 2 for v in a])
 
 
+# ------------------------------------------------------------------ Gate 0
+# Workbook Sheet 4 Block A is C5:C13 and C32 reads
+#   =IF(COUNTIF(C5:C13,"YES")=9,"CLEAN","REJECT")
+# so nine rows, all of which must be YES. The page splits them into seven
+# product-property rows (red) and two seller-duty rows (yellow); the tally it
+# prints must still be the workbook's 0-9.
+G0_A = ["ppe", "elec", "kids", "skin", "health", "load", "ip"]   # product properties
+G0_B = ["gpsr", "epr"]                                            # seller duties
+G0_ALL = G0_A + G0_B + ["brand"]
+
+
+def gate0(answers):
+    """answers: {id: 'yes'|'no'}; ids left out are unanswered."""
+    fail_a = [q for q in G0_A if answers.get(q) == "no"]
+    fail_b = [q for q in G0_B if answers.get(q) == "no"]
+    fail_brand = answers.get("brand") == "no"
+    block_a_yes = sum(1 for q in G0_A + G0_B if answers.get(q) == "yes")
+    answered = sum(1 for q in G0_ALL if answers.get(q))
+    if fail_a:
+        status = "red"
+    elif answered < len(G0_ALL):
+        status = None                       # gate must stay "not run"
+    elif fail_b or fail_brand:
+        status = "yellow"
+    else:
+        status = "green"
+    tally = "%d/9 YES" % block_a_yes
+    if block_a_yes == 9:
+        tally += " — CLEAN"
+    elif answered == len(G0_ALL):
+        tally += " — REJECT"
+    return {"status": status, "blockAyes": block_a_yes, "answered": answered,
+            "progress": "%d of %d answered · workbook Sheet 4 Block A tally: %s"
+                        % (answered, len(G0_ALL), tally)}
+
+
+G0_SCENARIOS = {
+    "all-yes":        {q: "yes" for q in G0_ALL},
+    "ppe-no":         {**{q: "yes" for q in G0_ALL}, "ppe": "no"},
+    "ip-no":          {**{q: "yes" for q in G0_ALL}, "ip": "no"},
+    "gpsr-no":        {**{q: "yes" for q in G0_ALL}, "gpsr": "no"},
+    "brand-no":       {**{q: "yes" for q in G0_ALL}, "brand": "no"},
+    "epr-and-brand":  {**{q: "yes" for q in G0_ALL}, "epr": "no", "brand": "no"},
+    "partial":        {"ppe": "yes", "elec": "yes", "kids": "yes"},
+    "partial-kill":   {"ppe": "no"},        # one product-property NO kills it alone
+}
+
+
 # ------------------------------------------------------------------ Gate 1
 def gate1(now=None):
     now = now or date.today()
@@ -225,7 +273,11 @@ def gate4(landed=12.93, disc=3.0, spend=24.0, max_push=1000.0):
 
 
 if __name__ == "__main__":
-    res = {"gate1": gate1(), "gate2": gate2(), "gate3": gate3(), "gate4": gate4()}
+    res = {"gate0": {k: gate0(v) for k, v in G0_SCENARIOS.items()},
+           "gate1": gate1(), "gate2": gate2(), "gate3": gate3(), "gate4": gate4()}
+    # the browser driver replays exactly these answer sets
+    with open(os.path.join(FIX, "gate0-scenarios.json"), "w") as f:
+        json.dump(G0_SCENARIOS, f, indent=2)
     os.makedirs(os.path.join(HERE, ".out"), exist_ok=True)
     with open(os.path.join(HERE, ".out", "mirror.json"), "w") as f:
         json.dump(res, f, indent=2, default=str)

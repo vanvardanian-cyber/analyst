@@ -94,6 +94,21 @@
   details table { border-collapse: collapse; margin-top: 8px; font-variant-numeric: tabular-nums; }
   details td, details th { border: 1px solid var(--grid); padding: 3px 10px; text-align: right; }
   details th:first-child, details td:first-child { text-align: left; }
+  /* gate 0 kill questions */
+  .qgroup h4.qhead { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-muted);
+                     margin:18px 0 2px; font-weight:600; }
+  .qgroup:first-child h4.qhead { margin-top:0; }
+  .qgroup p.qwhy { margin:0 0 6px; font-size:12.5px; color:var(--ink-2); }
+  .q { display:flex; gap:14px; align-items:flex-start; border-top:1px solid var(--grid); padding:9px 0; }
+  .q .qtext { flex:1; font-size:13.5px; }
+  .q .qtext .why { display:block; color:var(--ink-muted); font-size:12px; margin-top:2px; }
+  .q .yn { flex:0 0 auto; display:flex; gap:6px; }
+  .q .yn button { border:1px solid var(--border); background:var(--surface-1); color:var(--ink-2);
+                  border-radius:8px; padding:4px 13px; font:13px inherit; cursor:pointer; min-width:52px; }
+  .q .yn button:hover { border-color:var(--series-1); color:var(--ink-1); }
+  .q .yn button.on[data-v="yes"] { background:var(--good); border-color:var(--good); color:#fff; }
+  .q .yn button.on[data-v="no"]  { background:var(--critical); border-color:var(--critical); color:#fff; }
+  .g0prog { font-size:12.5px; color:var(--ink-muted); margin-top:14px; }
   /* gate 3 form */
   .form { display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:10px 16px; }
   .form label { font-size:12px; color:var(--ink-2); display:block; }
@@ -108,16 +123,41 @@
 <div class="wrap">
   <header>
     <h1>Воронка ниш <span style="font-size:12px;color:var(--ink-muted);font-weight:400">beta · easestore.de</span> <a href="../" style="font-size:12px;font-weight:400;color:var(--series-1);margin-left:8px">EN</a></h1>
-    <p class="tag">Четыре этапа по порядку: спрос реален и растёт → можно ли выиграть страницу → зарабатывает ли юнит достаточно → какой ключ открывает дверь. Бросьте экспорты Helium&nbsp;10 — получите честные вердикты. Жёлтый или красный этап никогда не блокирует: он говорит, что именно вы принимаете, если идёте дальше.</p>
+    <p class="tag">Пять этапов по порядку: можно ли это вообще законно продавать → спрос реален и растёт → можно ли выиграть страницу → зарабатывает ли юнит достаточно → какой ключ открывает дверь. Этапу 0 файлы не нужны; остальным нужны экспорты Helium&nbsp;10. Жёлтый или красный этап никогда не блокирует: он говорит, что именно вы принимаете, если идёте дальше.</p>
     <p class="privacy"><b>Ваши файлы не покидают браузер.</b> Всё считается на вашем устройстве; ничего не загружается и не хранится.</p>
   </header>
 
   <div class="steps">
+    <div class="step" id="step0" data-goto="gate0"><span class="dot"></span><b>0</b>&nbsp;Вопросы-убийцы</div>
     <div class="step" id="step1" data-goto="gate1"><span class="dot"></span><b>1</b>&nbsp;Сезонность и направление</div>
     <div class="step" id="step2" data-goto="gate2"><span class="dot"></span><b>2</b>&nbsp;Конкуренция (Xray)</div>
     <div class="step" id="step3" data-goto="gate3"><span class="dot"></span><b>3</b>&nbsp;Юнит-экономика</div>
     <div class="step" id="step4" data-goto="gate4"><span class="dot"></span><b>4</b>&nbsp;Ключи и цена запуска</div>
   </div>
+
+  <!-- ============ GATE 0 ============ -->
+  <section class="gate" id="gate0">
+    <h2>Этап 0 — Вопросы-убийцы <span class="gchip">не запускался</span></h2>
+    <p class="gsub">Без файлов, около 30 секунд. Девять комплаенс-исключений из книги (Лист 4, Блок A) плюс один вопрос про бренд. Ответьте на них прежде, чем тратить поисковый кредит Helium&nbsp;10 — они убивают нишу быстрее любых данных.</p>
+    <div class="card">
+      <div class="qgroup" id="q0a">
+        <h4 class="qhead">Свойства продукта</h4>
+        <p class="qwhy">НЕТ здесь — свойство самого продукта. Никакие бумаги этого не меняют: ответ — другой продукт.</p>
+      </div>
+      <div class="qgroup" id="q0b">
+        <h4 class="qhead">Обязанности продавца</h4>
+        <p class="qwhy">НЕТ здесь — это задача со стоимостью и сроком, а не мёртвая ниша. Они касаются любого потребительского товара, который вы когда-либо продадите, поэтому не отличают одну нишу от другой.</p>
+      </div>
+      <div class="qgroup" id="q0c">
+        <h4 class="qhead">Бренд</h4>
+        <p class="qwhy">В книге этого нет — вопрос решает, товар это или начало бренда.</p>
+      </div>
+      <div class="g0prog" id="g0prog"></div>
+      <div id="g0v"></div>
+      <button class="btn" id="g0reset" type="button">Сбросить ответы</button>
+    </div>
+    <div class="nexthint" id="hint0"></div>
+  </section>
 
   <!-- ============ GATE 1 ============ -->
   <section class="gate" id="gate1">
@@ -200,11 +240,13 @@
   <footer>
     <b>Где взять файлы:</b>
     <ol>
+      <li><b>Этап 0:</b> файла нет. Отвечайте из того, что уже знаете о продукте; если на какой-то вопрос честно ответить пока нельзя — вот это и надо выяснить первым делом.</li>
       <li><b>Этап 1:</b> Helium 10 → Cerebro → <i>Analyze Keywords</i> → маркетплейс <b>Amazon.de</b> → родительский ключ (+ 2–3 дочерних через запятую — один поисковый кредит) → иконка графика рядом с Search Volume → период <b>«All time»</b> → скачать.</li>
       <li><b>Этап 2:</b> найдите родительский ключ на Amazon.de → запустите <b>Xray</b> на странице выдачи → Export → CSV. Экспортируйте всю страницу; инструмент сам чистит и фильтрует.</li>
       <li><b>Этап 3:</b> комиссия FBA — из Xray или Revenue Calculator; EXW — из котировок поставщиков; фрахт — ставка вашего экспедитора × объём юнита.</li>
       <li><b>Этап 4:</b> Cerebro → прогоните родителя + детей → экспортируйте таблицу ключей как CSV (не график — тот файл для Этапа 1).</li>
     </ol>
+    <b>Пороги Этапа 0:</b> девять строк — это дословно Блок A Листа 4 книги, где любое НЕТ означает автоматический отказ. Эта страница их разделяет: семь строк о свойствах продукта остаются красным приговором, а две строки об обязанностях продавца (Ответственное лицо в ЕС по GPSR, упаковочный EPR через LUCID + уполномоченного представителя PPWR) показываются жёлтым. Причина: эти две — обязанности уровня продавца, привязанные к любому потребительскому товару, поэтому как фильтр ниш они отклонили бы все ниши одинаково — информации об этой нише в них нет. В подсчёте Блока A они по-прежнему считаются как НЕТ, и этот подсчёт печатается рядом с вердиктом без изменений. Вопроса про бренд в книге нет.<br>
     <b>Метод и пороги:</b> классическая мультипликативная декомпозиция, сезонная сила и согласованность лет — по Hyndman &amp; Athanasopoulos (otexts.com/fpp3); ворота отбора повторяют книгу EaseStore (выручка страницы, стена отзывов, присутствие Amazon, доля CN/HK, свежие входы); ценовой коридор и порог маржи — по распространённым практическим бенчмаркам (Freedom Ticket), ужесточённым под немецкую реальность с VAT. Месяцы «стены отзывов» считаются при 300 юнитах/мес и 1,5% отзывов. Все пороги задокументированы, скрытых нет. Учебный инструмент, не финансовая консультация. © EaseStore 2026
   </footer>
 </div>
@@ -227,7 +269,7 @@ function pearson(a,b){
 
 /* ---------- gate status machinery ---------- */
 const RANK = { green:0, yellow:1, red:2 };
-const gateState = { 1:null, 2:null, 3:null };
+const gateState = { 0:null, 1:null, 2:null, 3:null, 4:null };
 function setGate(n, status){                        // status: "green"|"yellow"|"red"
   gateState[n] = status;
   const g = $("#gate"+n), s = $("#step"+n);
@@ -239,6 +281,13 @@ function setGate(n, status){                        // status: "green"|"yellow"|
   if (status==="green") hint.textContent = "✓ Этап пройден." + nxt;
   else if (status==="yellow") hint.textContent = "▲ Можно идти дальше, но предупреждения выше — это риски, которые вы принимаете." + nxt;
   else hint.textContent = "✖ Ниша провалила жёсткие проверки. Можно продолжить ради цифр — но для первого товара рекомендация: сменить нишу." + nxt;
+}
+function clearGate(n){
+  gateState[n] = null;
+  const g = $("#gate"+n), s = $("#step"+n);
+  ["green","yellow","red"].forEach(c => { g.classList.remove(c); s.classList.remove(c); });
+  g.querySelector(".gchip").textContent = "не запускался";
+  $("#hint"+n).textContent = "";
 }
 document.querySelectorAll(".step").forEach(s=>s.addEventListener("click", ()=>{
   document.getElementById(s.dataset.goto).scrollIntoView({behavior:"smooth", block:"start"});
@@ -303,6 +352,93 @@ async function fileToRows(file){
     return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true });
   }
   return splitCSV(await file.text());
+}
+
+/* ================================================================
+   GATE 0 — kill questions (workbook Sheet 4 Block A + the brand question)
+   ================================================================ */
+const G0Q = [
+  { id:"ppe",    block:"A", text:"Не надевается на тело для защиты (Регламент ЕС по СИЗ 2016/425)",
+    why:"Каски, страховочные системы, очки, перчатки, светоотражающая одежда. Категория II требует нотифицированного органа." },
+  { id:"elec",   block:"A", text:"Нет батареи, вилки, мотора или светодиода",
+    why:"Включает LVD, EMC, RoHS, WEEE, BattG." },
+  { id:"kids",   block:"A", text:"Не предназначено для детей до 14 лет",
+    why:"Директива по безопасности игрушек 2009/48/EC." },
+  { id:"skin",   block:"A", text:"Нет контакта с едой, напитками или кожей",
+    why:"LFGB, регламент по косметике, тесты на миграцию." },
+  { id:"health", block:"A", text:"Нет медицинских, оздоровительных или ветеринарных заявлений",
+    why:"MDR, правила о заявлениях о пользе для здоровья. Регулирует вас заявление, а не сам предмет." },
+  { id:"load",   block:"A", text:"Ничего несущего, ничего останавливающего падение",
+    why:"Ловушка СИЗ под другим названием." },
+  { id:"ip",     block:"A", text:"Нет блокирующей интеллектуальной собственности: промдизайны, патенты, товарные знаки проверены",
+    why:"EUIPO eSearch, реестр DPMA, Google Patents. Нарушение промдизайна — убийца №1 аккаунтов частных марок в Германии. Отвечайте НЕТ, если нашли блокирующие права — и так же, если просто ещё не смотрели." },
+  { id:"gpsr",   block:"B", text:"Назначено Ответственное лицо в ЕС (GPSR)",
+    why:"Обязательно для продавца вне ЕС на любой потребительский товар." },
+  { id:"epr",    block:"B", text:"Упаковочный EPR сделан: LUCID + уполномоченный представитель PPWR",
+    why:"LUCID обязателен с 2022; обязанность по уполномоченному представителю PPWR действует с 12 августа 2026." },
+  { id:"brand",  block:"C", text:"Довольный покупатель правдоподобно купит у этого бренда второй, смежный товар в течение года",
+    why:"Если каждую продажу приходится покупать рекламой и никто не возвращается, у вас товар, а не бренд — и цена запуска повторяется вечно." },
+];
+const g0ans = {};
+let g0result = null;
+function g0build(){
+  const box = b => G0Q.filter(q=>q.block===b).map(q=>`
+      <div class="q" data-id="${q.id}">
+        <div class="qtext">${q.text}<span class="why">${q.why}</span></div>
+        <div class="yn"><button type="button" data-v="yes">Да</button><button type="button" data-v="no">Нет</button></div>
+      </div>`).join("");
+  $("#q0a").insertAdjacentHTML("beforeend", box("A"));
+  $("#q0b").insertAdjacentHTML("beforeend", box("B"));
+  $("#q0c").insertAdjacentHTML("beforeend", box("C"));
+  document.querySelectorAll("#gate0 .yn button").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const row = btn.closest(".q"), id = row.dataset.id;
+      g0ans[id] = g0ans[id] === btn.dataset.v ? null : btn.dataset.v;   // click again to unset
+      row.querySelectorAll("button").forEach(x=>x.classList.toggle("on", g0ans[id] === x.dataset.v));
+      g0verdict();
+    });
+  });
+  $("#g0reset").addEventListener("click", ()=>{
+    G0Q.forEach(q=>{ delete g0ans[q.id]; });
+    document.querySelectorAll("#gate0 .yn button").forEach(x=>x.classList.remove("on"));
+    g0verdict();
+  });
+  g0verdict();
+}
+function g0verdict(){
+  const answered = G0Q.filter(q=>g0ans[q.id]);
+  const failA = G0Q.filter(q=>q.block==="A" && g0ans[q.id]==="no");
+  const failB = G0Q.filter(q=>q.block==="B" && g0ans[q.id]==="no");
+  const failBrand = g0ans.brand === "no";
+  const blockAyes = G0Q.filter(q=>q.block!=="C" && g0ans[q.id]==="yes").length;
+  const names = qs => qs.map(q=>"«"+q.text+"»").join(", ");
+  $("#g0prog").textContent = answered.length + " из " + G0Q.length + " отвечено · подсчёт Блока A, Лист 4 книги: "
+    + blockAyes + "/9 ДА" + (blockAyes===9 ? " — ЧИСТО" : answered.length===G0Q.length ? " — ОТКАЗ" : "");
+
+  let v = null, status = null;
+  if (failA.length){
+    status = "red";
+    v = ["critical","РЕГУЛИРУЕМЫЙ ТОВАР — МЕНЯЙТЕ ПРОДУКТ",
+      "Провалено: "+names(failA)+". Лист 4 считает любое НЕТ в Блоке A автоматическим отказом, а эти строки — свойства самого предмета: каска не перестаёт быть СИЗ из-за хорошей маржи. Счёт за комплаенс (нотифицированный орган, испытания, техническое досье) приходит до первой продажи и рассчитан на объёмы, которых у вас пока нет."
+      + (failA.some(q=>q.id==="ip") ? " По строке про права: если НЕТ потому, что вы не проверяли — сначала проверьте (EUIPO eSearch, реестр DPMA, Google Patents), эта строка ещё может закрыться. Если вы нашли блокирующие права — не закроется." : "")];
+  } else if (answered.length < G0Q.length){
+    $("#g0v").innerHTML = "";
+    g0result = null;
+    clearGate(0);                                   // incomplete is "not run", not the last verdict
+    return;
+  } else if (failB.length || failBrand){
+    status = "yellow";
+    const bits = [];
+    if (failB.length) bits.push("Незакрытая настройка продавца: "+names(failB)+". Разовая, стоит сотни евро и касается любого товара, который вы когда-либо выставите — сделайте до заказа партии, а не до исследования. О самой нише это ничего не говорит, поэтому здесь жёлтый, а в подсчёте выше — НЕТ.");
+    if (failBrand) bits.push("Повторной покупки нет: каждую продажу придётся покупать рекламой, всегда, и цена запуска никогда не распределится на второй товар. Как первый товар ради денежного потока — рабочий вариант; как фундамент бренда — плохой.");
+    v = ["warning","ИССЛЕДОВАТЬ МОЖНО, НО ЕСТЬ ОТКРЫТЫЕ ПУНКТЫ", bits.join(" ")];
+  } else {
+    status = "green";
+    v = ["good","ЧИСТО","Здесь нишу ничто не убивает: исключений по регулируемым товарам нет, обязанности продавца закрыты, покупатель может вернуться за вторым товаром. Теперь выясните, нужно ли это кому-нибудь — Этап 1."];
+  }
+  g0result = { status, answers: {...g0ans}, blockAyes, failA: failA.map(q=>q.id), failB: failB.map(q=>q.id), brand: g0ans.brand || null };
+  $("#g0v").innerHTML = verdictHTML(v);
+  setGate(0, status);
 }
 
 /* ================================================================
@@ -920,6 +1056,7 @@ $("#demo4").addEventListener("click", e => {
     '"seitenschläferkissen",661,"41,852","83,704",36,323,">2,000",137,0,42\n';
   handleCerebro(new File([csv], "cerebro-example.csv", { type: "text/csv" }));
 });
+g0build();
 calcUnitEcon(false);
 $("#demo").addEventListener("click", e => {
   e.stopPropagation();

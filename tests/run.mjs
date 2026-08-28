@@ -44,6 +44,15 @@ const scrape = () => {
     note: txt(tr.querySelector("td:nth-child(2) span")),
   }));
   return {
+    gate0: { chip: chip(0), status: gateClass(0),
+             progress: txt(document.querySelector("#g0prog")),
+             verdicts: verdicts("#g0v"),
+             questions: [...document.querySelectorAll("#gate0 .q")].map(q => ({
+               id: q.dataset.id,
+               text: q.querySelector(".qtext").childNodes[0].textContent.trim(),
+               group: q.closest(".qgroup").id,
+               picked: [...q.querySelectorAll("button")].find(b => b.classList.contains("on"))?.dataset.v || null,
+             })) },
     gate1: { chip: chip(1), status: gateClass(1), meta: txt(document.querySelector("#out .meta")),
              tiles: tiles("#out"), verdicts: verdicts("#out"),
              error: txt(document.querySelector("#status.err")) },
@@ -65,6 +74,26 @@ async function runPage(browser, htmlPath, label) {
   page.on("console", m => { if (m.type() === "error") consoleErrors.push(m.text()); });
   await page.goto(pathToFileURL(htmlPath).href, { waitUntil: "domcontentloaded" });
 
+  // Gate 0 answer scenarios — clicked through the real buttons, one page, reset between.
+  const G0_SCENARIOS = JSON.parse(fs.readFileSync(path.join(HERE, "fixtures", "gate0-scenarios.json"), "utf8"));
+  const gate0Runs = {};
+  for (const [name, answers] of Object.entries(G0_SCENARIOS)) {
+    await page.click("#g0reset");
+    for (const [id, v] of Object.entries(answers))
+      await page.click(`#gate0 .q[data-id="${id}"] .yn button[data-v="${v}"]`);
+    gate0Runs[name] = await page.evaluate(() => ({
+      status: ["green", "yellow", "red"].find(c => document.querySelector("#gate0").classList.contains(c)) || null,
+      chip: document.querySelector("#gate0 .gchip").textContent.trim(),
+      progress: document.querySelector("#g0prog").textContent.trim(),
+      headline: document.querySelector("#g0v .verdict b")?.textContent.trim() || null,
+      hint: document.querySelector("#hint0").textContent.trim(),
+    }));
+  }
+  // leave Gate 0 answered clean for the rest of the funnel
+  await page.click("#g0reset");
+  for (const id of Object.keys(G0_SCENARIOS["all-yes"]))
+    await page.click(`#gate0 .q[data-id="${id}"] .yn button[data-v="yes"]`);
+
   await page.setInputFiles("#file", FIX("gate1-search-volume.csv"));
   await page.waitForSelector("#out .card", { timeout: 10000 });
 
@@ -81,6 +110,7 @@ async function runPage(browser, htmlPath, label) {
   await page.waitForSelector("#out4 .card", { timeout: 10000 });
 
   const data = await page.evaluate(scrape);
+  data.gate0Runs = gate0Runs;
   // ignore the CDN fetch failure that file:// causes for the (unused) xlsx lib
   data.consoleErrors = consoleErrors.filter(e => !/xlsx|cloudflare|ERR_/i.test(e));
   data.label = label;

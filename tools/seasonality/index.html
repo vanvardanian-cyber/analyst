@@ -94,6 +94,21 @@
   details table { border-collapse: collapse; margin-top: 8px; font-variant-numeric: tabular-nums; }
   details td, details th { border: 1px solid var(--grid); padding: 3px 10px; text-align: right; }
   details th:first-child, details td:first-child { text-align: left; }
+  /* gate 0 kill questions */
+  .qgroup h4.qhead { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-muted);
+                     margin:18px 0 2px; font-weight:600; }
+  .qgroup:first-child h4.qhead { margin-top:0; }
+  .qgroup p.qwhy { margin:0 0 6px; font-size:12.5px; color:var(--ink-2); }
+  .q { display:flex; gap:14px; align-items:flex-start; border-top:1px solid var(--grid); padding:9px 0; }
+  .q .qtext { flex:1; font-size:13.5px; }
+  .q .qtext .why { display:block; color:var(--ink-muted); font-size:12px; margin-top:2px; }
+  .q .yn { flex:0 0 auto; display:flex; gap:6px; }
+  .q .yn button { border:1px solid var(--border); background:var(--surface-1); color:var(--ink-2);
+                  border-radius:8px; padding:4px 13px; font:13px inherit; cursor:pointer; min-width:52px; }
+  .q .yn button:hover { border-color:var(--series-1); color:var(--ink-1); }
+  .q .yn button.on[data-v="yes"] { background:var(--good); border-color:var(--good); color:#fff; }
+  .q .yn button.on[data-v="no"]  { background:var(--critical); border-color:var(--critical); color:#fff; }
+  .g0prog { font-size:12.5px; color:var(--ink-muted); margin-top:14px; }
   /* gate 3 form */
   .form { display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:10px 16px; }
   .form label { font-size:12px; color:var(--ink-2); display:block; }
@@ -108,16 +123,41 @@
 <div class="wrap">
   <header>
     <h1>Niche Funnel <span style="font-size:12px;color:var(--ink-muted);font-weight:400">beta · easestore.de</span> <a href="ru/" style="font-size:12px;font-weight:400;color:var(--series-1);margin-left:8px">RU</a></h1>
-    <p class="tag">Four gates, in order: is demand real and rising → can you win the page → does a unit earn enough → which keyword opens the door. Drop the Helium&nbsp;10 exports, get honest verdicts. A yellow or red gate never blocks you — it tells you what you are accepting if you continue.</p>
+    <p class="tag">Five gates, in order: may you legally sell it at all → is demand real and rising → can you win the page → does a unit earn enough → which keyword opens the door. Gate 0 needs no files; the rest take the Helium&nbsp;10 exports. A yellow or red gate never blocks you — it tells you what you are accepting if you continue.</p>
     <p class="privacy"><b>Your files never leave your browser.</b> Everything is computed on your device; nothing is uploaded or stored.</p>
   </header>
 
   <div class="steps">
+    <div class="step" id="step0" data-goto="gate0"><span class="dot"></span><b>0</b>&nbsp;Kill questions</div>
     <div class="step" id="step1" data-goto="gate1"><span class="dot"></span><b>1</b>&nbsp;Seasonality &amp; direction</div>
     <div class="step" id="step2" data-goto="gate2"><span class="dot"></span><b>2</b>&nbsp;Competition (Xray)</div>
     <div class="step" id="step3" data-goto="gate3"><span class="dot"></span><b>3</b>&nbsp;Unit economics</div>
     <div class="step" id="step4" data-goto="gate4"><span class="dot"></span><b>4</b>&nbsp;Keywords &amp; launch cost</div>
   </div>
+
+  <!-- ============ GATE 0 ============ -->
+  <section class="gate" id="gate0">
+    <h2>Gate 0 — Kill questions <span class="gchip">not run</span></h2>
+    <p class="gsub">No files, about 30 seconds. The nine compliance exclusions from the workbook (Sheet 4, Block A) plus one brand question. Answer these before you spend a Helium&nbsp;10 search credit — they kill a niche faster than any data can.</p>
+    <div class="card">
+      <div class="qgroup" id="q0a">
+        <h4 class="qhead">Product properties</h4>
+        <p class="qwhy">A NO here is a property of the product itself. No amount of paperwork changes it — the answer is a different product.</p>
+      </div>
+      <div class="qgroup" id="q0b">
+        <h4 class="qhead">Seller duties</h4>
+        <p class="qwhy">A NO here is a task with a cost and a deadline, not a dead niche. These apply to every consumer product you will ever sell, so they cannot tell one niche from another.</p>
+      </div>
+      <div class="qgroup" id="q0c">
+        <h4 class="qhead">Brand</h4>
+        <p class="qwhy">Not in the workbook — it decides whether this is a product or the start of a brand.</p>
+      </div>
+      <div class="g0prog" id="g0prog"></div>
+      <div id="g0v"></div>
+      <button class="btn" id="g0reset" type="button">Clear answers</button>
+    </div>
+    <div class="nexthint" id="hint0"></div>
+  </section>
 
   <!-- ============ GATE 1 ============ -->
   <section class="gate" id="gate1">
@@ -200,11 +240,13 @@
   <footer>
     <b>How to get the files:</b>
     <ol>
+      <li><b>Gate 0:</b> no file. Answer from what you already know about the product; if you cannot answer one honestly yet, that is the first thing to go and find out.</li>
       <li><b>Gate 1:</b> Helium 10 → Cerebro → <i>Analyze Keywords</i> → marketplace <b>Amazon.de</b> → parent keyword (+ 2–3 children, comma-separated — one search credit) → chart icon next to Search Volume → period <b>“All time”</b> → download.</li>
       <li><b>Gate 2:</b> search the parent keyword on Amazon.de → run <b>Xray</b> on the results page → Export → CSV. Export the full page; the tool deduplicates and filters.</li>
       <li><b>Gate 3:</b> FBA fee from Xray or the Revenue Calculator; EXW from supplier quotes; freight from your forwarder’s rate × unit volume.</li>
       <li><b>Gate 4:</b> Cerebro → run the parent + children → export the keyword results table as CSV (not the chart — that file is Gate 1's).</li>
     </ol>
+    <b>Gate 0 thresholds:</b> the nine rows are workbook Sheet 4 Block A verbatim, where any NO is an automatic reject. This page splits them: the seven product-property rows stay a red kill, while the two seller-duty rows (EU Responsible Person under GPSR, packaging EPR via LUCID + PPWR authorised representative) are shown yellow. Reason: those two are seller-level obligations that attach to every consumer product, so as a niche filter they would reject every niche equally — they carry no information about this niche. They are still shown as NO in the Block A tally, which is printed unchanged next to the verdict. The brand question is not in the workbook.<br>
     <b>Method &amp; thresholds:</b> classical multiplicative decomposition, seasonal strength and year consistency after Hyndman &amp; Athanasopoulos (otexts.com/fpp3); selection gates follow the EaseStore workbook (page revenue, review moat, Amazon presence, CN/HK share, fresh entrants); price corridor and margin floor after common practitioner benchmarks (Freedom Ticket) — tightened for German VAT reality. Review-wall months assume 300 units/month at a 1.5% review rate. All thresholds documented, none hidden. Educational tool, not financial advice. © EaseStore 2026
   </footer>
 </div>
@@ -227,7 +269,7 @@ function pearson(a,b){
 
 /* ---------- gate status machinery ---------- */
 const RANK = { green:0, yellow:1, red:2 };
-const gateState = { 1:null, 2:null, 3:null };
+const gateState = { 0:null, 1:null, 2:null, 3:null, 4:null };
 function setGate(n, status){                        // status: "green"|"yellow"|"red"
   gateState[n] = status;
   const g = $("#gate"+n), s = $("#step"+n);
@@ -239,6 +281,13 @@ function setGate(n, status){                        // status: "green"|"yellow"|
   if (status==="green") hint.textContent = "✓ Gate passed." + nxt;
   else if (status==="yellow") hint.textContent = "▲ You can continue, but the warnings above are the risks you are accepting." + nxt;
   else hint.textContent = "✖ This niche failed hard checks. You can still continue to learn the numbers — but for a first product, changing the niche is the recommendation." + nxt;
+}
+function clearGate(n){
+  gateState[n] = null;
+  const g = $("#gate"+n), s = $("#step"+n);
+  ["green","yellow","red"].forEach(c => { g.classList.remove(c); s.classList.remove(c); });
+  g.querySelector(".gchip").textContent = "not run";
+  $("#hint"+n).textContent = "";
 }
 document.querySelectorAll(".step").forEach(s=>s.addEventListener("click", ()=>{
   document.getElementById(s.dataset.goto).scrollIntoView({behavior:"smooth", block:"start"});
@@ -303,6 +352,93 @@ async function fileToRows(file){
     return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true });
   }
   return splitCSV(await file.text());
+}
+
+/* ================================================================
+   GATE 0 — kill questions (workbook Sheet 4 Block A + the brand question)
+   ================================================================ */
+const G0Q = [
+  { id:"ppe",    block:"A", text:"Not worn for body protection (EU PPE Regulation 2016/425)",
+    why:"Helmets, harnesses, goggles, gloves, hi-vis. Cat II needs a notified body." },
+  { id:"elec",   block:"A", text:"No battery, plug, motor or LED",
+    why:"Triggers LVD, EMC, RoHS, WEEE, BattG." },
+  { id:"kids",   block:"A", text:"Not intended for children under 14",
+    why:"Toy Safety Directive 2009/48/EC." },
+  { id:"skin",   block:"A", text:"No contact with food, drink or skin",
+    why:"LFGB, cosmetics regulation, migration tests." },
+  { id:"health", block:"A", text:"No medical, health or veterinary claims",
+    why:"MDR, health-claims rules. The claim is what regulates you, not the object." },
+  { id:"load",   block:"A", text:"Nothing load-bearing, nothing that arrests a fall",
+    why:"The PPE trap under another name." },
+  { id:"ip",     block:"A", text:"No blocking IP: designs, patents, trademarks checked",
+    why:"EUIPO eSearch, DPMA register, Google Patents. Design infringement is the #1 private-label account killer in DE. Answer NO if you found blocking IP — and also if you simply have not looked yet." },
+  { id:"gpsr",   block:"B", text:"EU Responsible Person appointed (GPSR)",
+    why:"Mandatory for a non-EU seller on any consumer product." },
+  { id:"epr",    block:"B", text:"Packaging EPR done: LUCID + PPWR authorised representative",
+    why:"LUCID mandatory since 2022; the PPWR authorised-representative duty applies since 12 Aug 2026." },
+  { id:"brand",  block:"C", text:"A happy buyer would plausibly buy a second, related product from this brand within a year",
+    why:"If every sale has to be bought with advertising and nobody ever comes back, you own a product, not a brand — and the launch cost repeats forever." },
+];
+const g0ans = {};
+let g0result = null;
+function g0build(){
+  const box = b => G0Q.filter(q=>q.block===b).map(q=>`
+      <div class="q" data-id="${q.id}">
+        <div class="qtext">${q.text}<span class="why">${q.why}</span></div>
+        <div class="yn"><button type="button" data-v="yes">Yes</button><button type="button" data-v="no">No</button></div>
+      </div>`).join("");
+  $("#q0a").insertAdjacentHTML("beforeend", box("A"));
+  $("#q0b").insertAdjacentHTML("beforeend", box("B"));
+  $("#q0c").insertAdjacentHTML("beforeend", box("C"));
+  document.querySelectorAll("#gate0 .yn button").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const row = btn.closest(".q"), id = row.dataset.id;
+      g0ans[id] = g0ans[id] === btn.dataset.v ? null : btn.dataset.v;   // click again to unset
+      row.querySelectorAll("button").forEach(x=>x.classList.toggle("on", g0ans[id] === x.dataset.v));
+      g0verdict();
+    });
+  });
+  $("#g0reset").addEventListener("click", ()=>{
+    G0Q.forEach(q=>{ delete g0ans[q.id]; });
+    document.querySelectorAll("#gate0 .yn button").forEach(x=>x.classList.remove("on"));
+    g0verdict();
+  });
+  g0verdict();
+}
+function g0verdict(){
+  const answered = G0Q.filter(q=>g0ans[q.id]);
+  const failA = G0Q.filter(q=>q.block==="A" && g0ans[q.id]==="no");
+  const failB = G0Q.filter(q=>q.block==="B" && g0ans[q.id]==="no");
+  const failBrand = g0ans.brand === "no";
+  const blockAyes = G0Q.filter(q=>q.block!=="C" && g0ans[q.id]==="yes").length;
+  const names = qs => qs.map(q=>"“"+q.text+"”").join(", ");
+  $("#g0prog").textContent = answered.length + " of " + G0Q.length + " answered · workbook Sheet 4 Block A tally: "
+    + blockAyes + "/9 YES" + (blockAyes===9 ? " — CLEAN" : answered.length===G0Q.length ? " — REJECT" : "");
+
+  let v = null, status = null;
+  if (failA.length){
+    status = "red";
+    v = ["critical","REGULATED — CHANGE THE PRODUCT",
+      "Failed: "+names(failA)+". Sheet 4 treats any NO in Block A as an automatic reject, and these rows are properties of the object: a helmet does not stop being PPE because the margin is good. The compliance bill (notified body, testing, technical file) lands before your first sale and is written for volumes you do not have yet."
+      + (failA.some(q=>q.id==="ip") ? " On the IP row: if the answer is NO because you have not checked, check first — EUIPO eSearch, DPMA register, Google Patents — this one may still clear. If you found blocking IP, it will not." : "")];
+  } else if (answered.length < G0Q.length){
+    $("#g0v").innerHTML = "";
+    g0result = null;
+    clearGate(0);                                   // incomplete is "not run", not the last verdict
+    return;
+  } else if (failB.length || failBrand){
+    status = "yellow";
+    const bits = [];
+    if (failB.length) bits.push("Outstanding seller setup: "+names(failB)+". One-off, priced in hundreds of euros, and it applies to every product you will ever list — do it before you order stock, not before you research. It does not tell you anything about this niche, which is why it is yellow here and a NO in the tally above.");
+    if (failBrand) bits.push("No repeat purchase: every sale has to be bought with advertising, forever, and the launch cost never amortises across a second product. Workable as a first cash-flow product; a poor foundation for a brand.");
+    v = ["warning","CLEAR TO RESEARCH, WITH OPEN ITEMS", bits.join(" ")];
+  } else {
+    status = "green";
+    v = ["good","CLEAN","Nothing here kills the niche: no regulated-product exclusion, seller duties in place, and a buyer who might come back for a second product. Now find out whether anyone wants it — Gate 1."];
+  }
+  g0result = { status, answers: {...g0ans}, blockAyes, failA: failA.map(q=>q.id), failB: failB.map(q=>q.id), brand: g0ans.brand || null };
+  $("#g0v").innerHTML = verdictHTML(v);
+  setGate(0, status);
 }
 
 /* ================================================================
@@ -920,6 +1056,7 @@ $("#demo4").addEventListener("click", e => {
     '"seitenschläferkissen",661,"41,852","83,704",36,323,">2,000",137,0,42\n';
   handleCerebro(new File([csv], "cerebro-example.csv", { type: "text/csv" }));
 });
+g0build();
 calcUnitEcon(false);
 $("#demo").addEventListener("click", e => {
   e.stopPropagation();

@@ -1,0 +1,82 @@
+{
+  "all-yes": {
+    "ppe": "yes",
+    "elec": "yes",
+    "kids": "yes",
+    "skin": "yes",
+    "health": "yes",
+    "load": "yes",
+    "ip": "yes",
+    "gpsr": "yes",
+    "epr": "yes",
+    "brand": "yes"
+  },
+  "ppe-no": {
+    "ppe": "no",
+    "elec": "yes",
+    "kids": "yes",
+    "skin": "yes",
+    "health": "yes",
+    "load": "yes",
+    "ip": "yes",
+    "gpsr": "yes",
+    "epr": "yes",
+    "brand": "yes"
+  },
+  "ip-no": {
+    "ppe": "yes",
+    "elec": "yes",
+    "kids": "yes",
+    "skin": "yes",
+    "health": "yes",
+    "load": "yes",
+    "ip": "no",
+    "gpsr": "yes",
+    "epr": "yes",
+    "brand": "yes"
+  },
+  "gpsr-no": {
+    "ppe": "yes",
+    "elec": "yes",
+    "kids": "yes",
+    "skin": "yes",
+    "health": "yes",
+    "load": "yes",
+    "ip": "yes",
+    "gpsr": "no",
+    "epr": "yes",
+    "brand": "yes"
+  },
+  "brand-no": {
+    "ppe": "yes",
+    "elec": "yes",
+    "kids": "yes",
+    "skin": "yes",
+    "health": "yes",
+    "load": "yes",
+    "ip": "yes",
+    "gpsr": "yes",
+    "epr": "yes",
+    "brand": "no"
+  },
+  "epr-and-brand": {
+    "ppe": "yes",
+    "elec": "yes",
+    "kids": "yes",
+    "skin": "yes",
+    "health": "yes",
+    "load": "yes",
+    "ip": "yes",
+    "gpsr": "yes",
+    "epr": "no",
+    "brand": "no"
+  },
+  "partial": {
+    "ppe": "yes",
+    "elec": "yes",
+    "kids": "yes"
+  },
+  "partial-kill": {
+    "ppe": "no"
+  }
+}
