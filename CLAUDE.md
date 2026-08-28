@@ -62,6 +62,13 @@ Two deliverables live here:
 - Gate 1: monthly averaging of weekly points, seasonal index, amplitude bands
   (1.5/2.5/4), top-4 share, YoY direction (±5%/−15%), year-consistency (mean pairwise
   Pearson of log vectors, 0.4/0.7), seasonal strength (Hyndman F_s, needs 30+ months).
+  Year blocks: up to three. A live "All time" export always ends in the current month,
+  which is dropped, so three calendar years arrive as 35 months — the leftover months
+  become a PART-YEAR block (minimum 6) instead of being discarded. It counts toward
+  consistency, never toward YoY, and the card says so. Consistency correlates only the
+  months present in BOTH blocks, so a missing month is unknown rather than zero; for
+  two full blocks this is identical to the old maths (verified: complete-data
+  consistency and amplitude are pinned to literal values in the suite).
 - Gate 2: dedupe ASINs (sponsored repeats), drop off-modal-category rows. Checks:
   top-10 revenue ≥€40k, top-ASIN share <30/40%, review moat (>500-review count with
   proof-of-entry softening: ≥3 listings ≤100 reviews earning >€3k/mo → yellow; seller
@@ -93,12 +100,14 @@ Two deliverables live here:
    11 sheets and Netlify/Cloudflare hosting.
 
 ## Known bugs, not yet fixed
-- **Gate 2 invents a finding from a missing column.** A real Xray export has no
-  "Seller Age" column, so `sellerAge` is null for every row, `isNewShop` is never
-  true, and the review-moat note asserts "⚠ ALL proof listings sit on veteran seller
-  accounts (>18 months)" as fact. The fresh-entrants note has the same root cause and
-  prints "(0 of them on seller accounts under 18 months)". Missing data must read as
-  missing, not as a finding.
+- **Gate 2 would invent a finding IF the Seller Age column were missing.** LATENT,
+  not live: a real Xray export (2026-08) does carry "Seller Age (mo)", populated on
+  all 51 rows, and the page reads it correctly. An earlier version of this file
+  claimed the column does not exist — that was wrong. The latent defect stands: if the
+  column is ever absent, `sellerAge` is null everywhere, `isNewShop` is never true,
+  and the moat note asserts "⚠ ALL proof listings sit on veteran seller accounts
+  (>18 months)" as fact rather than reporting that the data is missing. Same for the
+  fresh-entrants note, whose `a.freshNewShops` guard is an always-truthy array.
 - **A softened hard gate can still produce a green page verdict.** With 12 listings
   over 500 reviews and a 202-month review wall, proof-of-entry softens the moat check
   red→yellow, and the overall rule (1 yellow → green) then prints "PAGE IS WINNABLE".

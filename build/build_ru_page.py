@@ -240,8 +240,8 @@ t('"DECLINING",p+prev+". Drop unless Trends shows a clearly temporary dip."',
 
 # ---------- JS: gate 1 render ----------
 t(' complete months used (', ' полных месяцев (')
-t(' year${r.blocks.length>1?"s":""} compared · weekly points averaged per calendar month · current month dropped',
-  ' г. в сравнении · недельные точки усреднены по календарным месяцам · текущий месяц отброшен')
+t(' year block${r.blocks.length>1?"s":""} compared${r.blocks.some(b=>b.partial)?" (oldest is a part-year of "+r.blocks.find(b=>b.partial).seg.length+" months — it counts toward consistency, never toward YoY)":""} · weekly points averaged per calendar month · current month dropped',
+  ' годовых блока в сравнении${r.blocks.some(b=>b.partial)?" (старший — неполный год из "+r.blocks.find(b=>b.partial).seg.length+" мес.: он идёт в согласованность, но никогда в YoY)":""} · недельные точки усреднены по календарным месяцам · текущий месяц отброшен')
 t(' average index (bars)', ' средний индекс (столбцы)')
 t('${tile("Amplitude", fmt(r.amp), "peak ÷ lowest month")}', '${tile("Амплитуда", fmt(r.amp), "пик ÷ худший месяц")}')
 t('${tile("Consistency", r.consistency==null?"—":fmt(r.consistency), "do the years agree? (−1…1)")}',

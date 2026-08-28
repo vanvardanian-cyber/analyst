@@ -247,6 +247,38 @@ if page.get("real") and mir.get("real"):
 else:
     print("(real Helium 10 exports absent — parsing lane skipped)\n")
 
+# ---- Partial-block rule, pinned with literal expectations rather than mirror
+#      agreement (the mirror moved with the page, so agreement proves nothing).
+#      On COMPLETE data the rule must be a no-op; the numbers below are the ones
+#      the page produced before the rule existed.
+same("G1 complete data still gives 3 full blocks, no part-year",
+     "part-year" in (en["gate1"]["meta"] or ""), False)
+same("G1 complete-data consistency unchanged by the rule",
+     en["gate1"]["tiles"].get("Consistency"), "0.96")
+same("G1 complete-data amplitude unchanged by the rule",
+     en["gate1"]["tiles"].get("Amplitude"), "1.92")
+ok = any("prior year" in v["text"] for v in en["gate1"]["verdicts"])
+checks.append((ok, "G1 three full years still report a prior-year YoY",
+               [v["text"][:60] for v in en["gate1"]["verdicts"]], "one mentions prior year"))
+if not ok:
+    fails.append("G1 lost the prior-year YoY on three complete years")
+
+if page.get("real") and mir.get("real"):
+    R, mR = page["real"], mir["real"]
+    same("REAL G1 keeps the leftover months as a part-year block", mR["gate1"]["blocks"], 3)
+    same("REAL G1 part-year is 11 months",   mR["gate1"]["partialMonths"], 11)
+    same("REAL G1 only two whole years",     mR["gate1"]["fullBlocks"], 2)
+    same("REAL G1 no prior-year YoY off a part-year", mR["gate1"]["yoyPrev"], None)
+    ok = "part-year of 11 months" in (R["g1meta"] or "")
+    checks.append((ok, "REAL G1 card says the block is a part-year", R["g1meta"], "says part-year of 11 months"))
+    if not ok:
+        fails.append("REAL G1 card does not disclose the part-year block")
+    # a generic export header must not become the dossier's keyword name
+    ok = R["g1title"] not in ("Search Volume", "Volume", "SV")
+    checks.append((ok, "REAL G1 title is not the generic column header", R["g1title"], "not 'Search Volume'"))
+    if not ok:
+        fails.append("REAL G1 still titles the card with the generic column header")
+
 # ---- no JS errors on either page
 same("EN page: no JS errors", en["consoleErrors"], [])
 same("RU page: no JS errors", ru["consoleErrors"], [])

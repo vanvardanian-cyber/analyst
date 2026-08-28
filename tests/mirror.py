@@ -11,6 +11,7 @@ from datetime import date, datetime
 HERE = os.path.dirname(os.path.abspath(__file__))
 FIX = os.path.join(HERE, "fixtures")
 MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+MIN_PARTIAL = 6      # fewer overlapping months than this is not a year
 
 
 def read_csv(name):
@@ -136,21 +137,50 @@ def gate1(fixture="gate1-search-volume.csv", now=None):
     amp = max(nz) / min(nz)
     top4 = sum(sorted(filled, reverse=True)[:4]) / sum(filled)
 
+    # Year blocks. A live "All time" export ends in the current month, which is
+    # dropped, so three calendar years arrive as 35 months. The leftover months
+    # become a short block instead of being discarded.
     n = len(months)
     k = min(3, n // 12)
     blocks = []
-    for j in range(k - 1, -1, -1):
-        seg = months[n - 12 * (j + 1): n - 12 * j]
+
+    def mk(seg, partial):
         vec = [None] * 12
         for m in seg:
             vec[m["m"] - 1] = m["avg"]
-        blocks.append({"seg": seg, "vec": vec})
-    tot = [sum(m["avg"] for m in b["seg"]) for b in blocks]
-    yoy = tot[-1] / tot[-2] - 1 if len(blocks) >= 2 and tot[-2] else None
+        return {"seg": seg, "vec": vec, "partial": partial}
 
-    logs = [[math.log((v or 0) + 1) for v in b["vec"]] for b in blocks]
-    rs = [pearson(logs[i], logs[j])
-          for i in range(len(logs)) for j in range(i + 1, len(logs))]
+    for j in range(k - 1, -1, -1):
+        blocks.append(mk(months[n - 12 * (j + 1): n - 12 * j], False))
+    left = n - 12 * k
+    if k < 3 and left >= MIN_PARTIAL:
+        blocks.insert(0, mk(months[:left], True))
+
+    full = [b for b in blocks if not b["partial"]]
+    yoy = yoy_prev = None
+    if len(full) >= 2:
+        t = [sum(m["avg"] for m in b["seg"]) for b in full]
+        if t[-2]:
+            yoy = t[-1] / t[-2] - 1
+        if len(full) == 3 and t[0]:
+            yoy_prev = t[1] / t[0] - 1
+
+    # pairwise-complete correlation: a month absent from a short block is
+    # unknown, not zero. Identical to the old maths when both blocks are full.
+    def pair_r(a, b):
+        xs, ys = [], []
+        for i in range(12):
+            if a[i] is not None and b[i] is not None:
+                xs.append(math.log(a[i] + 1))
+                ys.append(math.log(b[i] + 1))
+        return pearson(xs, ys) if len(xs) >= MIN_PARTIAL else None
+
+    rs = []
+    for i in range(len(blocks)):
+        for j in range(i + 1, len(blocks)):
+            r = pair_r(blocks[i]["vec"], blocks[j]["vec"])
+            if r is not None:
+                rs.append(r)
     consistency = statistics.fmean(rs) if rs else None
 
     strength = None
@@ -178,6 +208,8 @@ def gate1(fixture="gate1-search-volume.csv", now=None):
             break
 
     return {"monthsUsed": len(months), "blocks": len(blocks), "amplitude": amp,
+            "partialMonths": next((len(b["seg"]) for b in blocks if b["partial"]), None),
+            "fullBlocks": len(full), "yoyPrev": yoy_prev,
             "consistency": consistency, "strength": strength, "top4": top4,
             "yoy": yoy, "ramp": None if ramp is None else MONTHS[ramp],
             "index": index}

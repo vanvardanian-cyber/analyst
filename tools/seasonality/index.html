@@ -507,7 +507,7 @@ function g0verdict(){
 /* ================================================================
    GATE 1 — seasonality (unchanged v0.2 engine)
    ================================================================ */
-function analyzeRows(rows){
+function analyzeRows(rows, srcName){
   if (!rows || rows.length < 3) throw new Error("Could not read any rows from the file.");
   if (rows[0].some(h => String(h??"").trim().toLowerCase() === "asin"))
     throw new Error("This is the Xray export — it goes to Gate 2 below. Gate 1 takes the search-volume history file (Cerebro → chart icon → download).");
@@ -526,8 +526,14 @@ function analyzeRows(rows){
   for (let c=0; c<nCols; c++){
     if (c === dateCol) continue;
     const nums = body.reduce((k,r)=>k+(parseNumber(r[c])!=null?1:0),0);
-    if (nums >= body.length * 0.5 && nums >= 3)
-      series.push({ col:c, name: headerRow && headerRow[c] ? String(headerRow[c]) : "Keyword "+(series.length+1) });
+    if (nums >= body.length * 0.5 && nums >= 3){
+      // A single-keyword Cerebro chart export names its column "Search Volume",
+      // which tells a dossier nothing. Fall back to the file name.
+      let nm = headerRow && headerRow[c] ? String(headerRow[c]).trim() : "";
+      if (!nm || /^(search volume|volume|sv|value|count)$/i.test(nm))
+        nm = srcName ? srcName.replace(/\.[^.]+$/,"") : "Keyword "+(series.length+1);
+      series.push({ col:c, name: nm });
+    }
   }
   if (!series.length) throw new Error("No keyword columns with numbers found next to the date column.");
   const now = new Date(); const curKey = now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
@@ -546,17 +552,25 @@ function analyzeRows(rows){
     return computeStats(s.name, months);
   });
 }
+const MIN_PARTIAL = 6;        // fewer overlapping months than this is not a year
 function yearBlocks(months){
   const n = months.length, k = Math.min(3, Math.floor(n/12));
   const blocks = [];
-  for (let j=k-1; j>=0; j--){
-    const seg = months.slice(n-12*(j+1), n-12*j);
+  const mk = (seg, partial) => {
     const vec = new Array(12).fill(null);
     for (const m of seg) vec[m.ym[1]-1] = m.avg;
     const yy = y => String(y).slice(2);
-    blocks.push({ seg, vec, label: seg[0].ym[0]===seg[11].ym[0] ? "’"+yy(seg[0].ym[0])
-                        : "’"+yy(seg[0].ym[0])+"–"+yy(seg[11].ym[0]) });
-  }
+    const a = seg[0], z = seg[seg.length-1];
+    return { seg, vec, partial,
+             label: (a.ym[0]===z.ym[0] ? "’"+yy(a.ym[0]) : "’"+yy(a.ym[0])+"–"+yy(z.ym[0]))
+                    + (partial ? " ("+seg.length+" mo)" : "") };
+  };
+  for (let j=k-1; j>=0; j--) blocks.push(mk(months.slice(n-12*(j+1), n-12*j), false));
+  // A live "All time" export always ends in the current month, which is dropped —
+  // so a 3-year export leaves 35 months and the oldest 11 used to be discarded.
+  // Keep them as a short block rather than throwing a year of evidence away.
+  const left = n - 12*k;
+  if (k < 3 && left >= MIN_PARTIAL) blocks.unshift(mk(months.slice(0, left), true));
   return blocks;
 }
 function computeStats(name, months){
@@ -572,18 +586,28 @@ function computeStats(name, months){
   const top4 = filled.length>=4 ? sorted.slice(0,4).reduce((a,b)=>a+b,0)/filled.reduce((a,b)=>a+b,0) : null;
   const blocks = yearBlocks(months);
   let yoy = null, yoyPrev = null;
-  if (blocks.length >= 2){
+  const full = blocks.filter(b => !b.partial);       // only whole years may be compared
+  if (full.length >= 2){
     const tot = b => b.seg.reduce((a,m)=>a+m.avg,0);
-    const t = blocks.map(tot);
-    if (t[blocks.length-2] > 0) yoy = t[blocks.length-1]/t[blocks.length-2] - 1;
-    if (blocks.length === 3 && t[0] > 0) yoyPrev = t[1]/t[0] - 1;
+    const t = full.map(tot);
+    if (t[full.length-2] > 0) yoy = t[full.length-1]/t[full.length-2] - 1;
+    if (full.length === 3 && t[0] > 0) yoyPrev = t[1]/t[0] - 1;
   }
   let consistency = null;
   if (blocks.length >= 2){
-    const logs = blocks.map(b => b.vec.map(v => Math.log((v??0)+1)));
+    // pairwise-complete: a month missing from a short block is unknown, not zero.
+    // For two full blocks this is identical to correlating all twelve.
+    const pairR = (a,b) => {
+      const xs=[], ys=[];
+      for (let i=0;i<12;i++) if (a[i]!=null && b[i]!=null){ xs.push(Math.log(a[i]+1)); ys.push(Math.log(b[i]+1)); }
+      return xs.length >= MIN_PARTIAL ? pearson(xs,ys) : null;
+    };
     const rs = [];
-    for (let i=0;i<logs.length;i++) for (let j=i+1;j<logs.length;j++) rs.push(pearson(logs[i],logs[j]));
-    consistency = mean(rs);
+    for (let i=0;i<blocks.length;i++) for (let j=i+1;j<blocks.length;j++){
+      const r = pairR(blocks[i].vec, blocks[j].vec);
+      if (r != null) rs.push(r);
+    }
+    consistency = rs.length ? mean(rs) : null;
   }
   let strength = null;
   if (months.length >= 30){
@@ -699,7 +723,7 @@ function render(results){
     const card = document.createElement("div"); card.className = "card";
     card.innerHTML = `
       <h3 class="cardtitle">${r.name}</h3>
-      <div class="meta">${r.months.length} complete months used (${first} → ${last}) · ${r.blocks.length} year${r.blocks.length>1?"s":""} compared · weekly points averaged per calendar month · current month dropped</div>
+      <div class="meta">${r.months.length} complete months used (${first} → ${last}) · ${r.blocks.length} year block${r.blocks.length>1?"s":""} compared${r.blocks.some(b=>b.partial)?" (oldest is a part-year of "+r.blocks.find(b=>b.partial).seg.length+" months — it counts toward consistency, never toward YoY)":""} · weekly points averaged per calendar month · current month dropped</div>
       <div class="tiles">
         ${tile("Amplitude", fmt(r.amp), "peak ÷ lowest month")}
         ${tile("Consistency", r.consistency==null?"—":fmt(r.consistency), "do the years agree? (−1…1)")}
@@ -1276,7 +1300,7 @@ async function handle(file){
   const st = $("#status"); st.className="status"; st.textContent = "Reading " + file.name + " …";
   try {
     const rows = await fileToRows(file);
-    const results = analyzeRows(rows);
+    const results = analyzeRows(rows, file.name);
     st.textContent = results.length + " keyword" + (results.length>1?"s":"") + " analyzed.";
     render(results);
   } catch (e){ st.className = "status err"; st.textContent = "⚠ " + e.message; }
