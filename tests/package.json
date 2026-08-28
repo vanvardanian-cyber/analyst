@@ -1,0 +1,9 @@
+{
+  "name": "easestore-tools-tests",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Headless verification of tools/seasonality — page numbers vs an independent Python mirror.",
+  "scripts": { "test": "node run.mjs" },
+  "dependencies": { "playwright-core": "^1.49.0" }
+}
