@@ -207,6 +207,45 @@ const server = http.createServer((req, res) => {
 await new Promise(r => server.listen(0, "127.0.0.1", r));
 const BASE = `http://127.0.0.1:${server.address().port}`;
 
+// Optional lane: if real Helium 10 exports are sitting in fixtures/ (gitignored,
+// they identify the niche under research) run them through Gates 1 and 2 too.
+// This is the only thing that tests the PARSING of a real export.
+const REAL = { gate1: "real-gate1-chart.csv", gate2: "real-gate2-xray.csv" };
+const haveReal = Object.values(REAL).every(f => fs.existsSync(FIX(f)));
+
+async function runRealPage(browser) {
+  const page = await browser.newPage();
+  const errs = [];
+  page.on("pageerror", e => errs.push(String(e)));
+  page.on("console", m => { if (m.type() === "error") errs.push(m.text()); });
+  await page.goto(BASE + "/tools/seasonality/", { waitUntil: "domcontentloaded" });
+  await page.setInputFiles("#file", FIX(REAL.gate1));
+  await page.waitForSelector("#out .card, #status.err");
+  await page.setInputFiles("#file2", FIX(REAL.gate2));
+  await page.waitForSelector("#out2 .card, #status2.err");
+  const data = await page.evaluate(() => {
+    const txt = el => (el ? el.textContent.trim() : null);
+    const tiles = sel => Object.fromEntries([...document.querySelectorAll(`${sel} .tile`)]
+      .map(t => [t.querySelector(".k").textContent.trim(), t.querySelector(".v").textContent.trim()]));
+    return {
+      g1error: txt(document.querySelector("#status.err")),
+      g2error: txt(document.querySelector("#status2.err")),
+      g1title: txt(document.querySelector("#out .cardtitle")),
+      g1meta: txt(document.querySelector("#out .meta")),
+      g1tiles: tiles("#out"),
+      g2meta: txt(document.querySelector("#out2 .meta")),
+      g2tiles: tiles("#out2"),
+      g2notes: [...document.querySelectorAll("#out2 table.checks tr")].map(tr => ({
+        label: txt(tr.querySelector("td:nth-child(2) b")),
+        note: txt(tr.querySelector("td:nth-child(2)")).replace(/\s+/g, " "),
+      })),
+    };
+  });
+  data.pageErrors = errs.filter(e => !/favicon|ERR_/i.test(e));
+  await page.close();
+  return data;
+}
+
 const exe = browserPath();
 if (!exe) { console.error("No Chromium/Chrome binary found. Install Chrome, or set one of:\n" + CANDIDATE_BROWSERS.join("\n")); process.exit(2); }
 const browser = await chromium.launch({ executablePath: exe, headless: true });
@@ -214,10 +253,13 @@ const results = {
   browser: exe,
   en: await runPage(browser, "/tools/seasonality/", "EN"),
   ru: await runPage(browser, "/tools/seasonality/ru/", "RU"),
+  real: haveReal ? await runRealPage(browser) : null,
 };
 await browser.close();
 server.close();
 fs.mkdirSync(OUT, { recursive: true });
 fs.writeFileSync(path.join(OUT, "page.json"), JSON.stringify(results, null, 2));
+console.log(haveReal ? "real Helium 10 exports: present, exercised"
+                     : "real Helium 10 exports: absent, synthetic fixtures only");
 console.log("page.json written · EN gate chips:",
   ["gate1","gate2","gate3","gate4"].map(g => `${g}=${results.en[g].status}`).join(" "));

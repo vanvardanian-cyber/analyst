@@ -5,7 +5,7 @@ Written from the workbook + the documented method, NOT by transcribing the
 page's JavaScript. Its output is the expected answer; run.mjs scrapes what the
 page actually shows; compare.py puts the two side by side.
 """
-import csv, json, math, os, statistics
+import csv, json, math, os, re, statistics
 from datetime import date, datetime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -16,6 +16,31 @@ MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec
 def read_csv(name):
     with open(os.path.join(FIX, name), encoding="utf-8") as f:
         return [r for r in csv.reader(f)]
+
+
+def xfloat(x):
+    """A numeric cell from any Helium 10 export: '4,806.42', '15.29', '', 'N/A'."""
+    x = (x or "").strip()
+    if x in ("", "N/A", "n/a", "-"):
+        return None
+    try:
+        return float(x.replace(",", ""))
+    except ValueError:
+        return None
+
+
+def xdate(x):
+    """A date cell: '2026-08-22 00:00:00' or 'Nov 27, 2025'."""
+    x = (x or "").strip()
+    m = re.match(r"(\d{4})-(\d{1,2})-(\d{1,2})", x)
+    if m:
+        return date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+    for f in ("%b %d, %Y", "%B %d, %Y"):
+        try:
+            return datetime.strptime(x, f).date()
+        except ValueError:
+            pass
+    return None
 
 
 def pearson(a, b):
@@ -87,7 +112,10 @@ def gate1(fixture="gate1-search-volume.csv", now=None):
     rows = read_csv(fixture)
     acc = {}
     for r in rows[1:]:
-        d = datetime.strptime(r[0], "%Y-%m-%d").date()
+        m = re.match(r"(\d{4})-(\d{1,2})-(\d{1,2})", r[0].strip())
+        if not m:
+            continue
+        d = date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
         key = "%04d-%02d" % (d.year, d.month)
         if key == cur_key:
             continue
@@ -156,18 +184,21 @@ def gate1(fixture="gate1-search-volume.csv", now=None):
 
 
 # ------------------------------------------------------------------ Gate 2
-def gate2():
-    rows = read_csv("gate2-xray.csv")
+def gate2(fixture="gate2-xray.csv"):
+    rows = read_csv(fixture)
     h = [c.strip().lower() for c in rows[0]]
+    # real exports name these "Price  €" and "Fees  €", so match by prefix
     ix = {"asin": h.index("asin"), "brand": h.index("brand"),
-          "price": h.index("price"), "cat": h.index("category"),
+          "price": next(i for i, c in enumerate(h) if c.startswith("price")),
+          "cat": h.index("category"),
           "rev": next(i for i, c in enumerate(h) if c.startswith("asin revenue")),
           "rating": next(i for i, c in enumerate(h) if c.startswith("ratings")),
           "reviews": next(i for i, c in enumerate(h) if c.startswith("review count")),
           "fees": next(i for i, c in enumerate(h) if c.startswith("fees")),
           "weight": next(i for i, c in enumerate(h) if c.startswith("weight")),
           "created": next(i for i, c in enumerate(h) if c.startswith("creation date")),
-          "country": next(i for i, c in enumerate(h) if c.startswith("seller country"))}
+          "country": next(i for i, c in enumerate(h) if c.startswith("seller country")),
+          "age": next((i for i, c in enumerate(h) if c.startswith("seller age")), None)}
     seen, dupes = {}, 0
     for r in rows[1:]:
         a = r[ix["asin"]].strip()
@@ -175,11 +206,12 @@ def gate2():
             dupes += 1
             continue
         seen[a] = {"asin": a, "brand": r[ix["brand"]], "cat": r[ix["cat"]],
-                   "rev": float(r[ix["rev"]]), "price": float(r[ix["price"]]),
-                   "rating": float(r[ix["rating"]]), "reviews": float(r[ix["reviews"]]),
-                   "fees": float(r[ix["fees"]]), "weight": float(r[ix["weight"]]),
-                   "created": datetime.strptime(r[ix["created"]], "%Y-%m-%d").date(),
-                   "country": r[ix["country"]].upper()}
+                   "rev": xfloat(r[ix["rev"]]) or 0.0, "price": xfloat(r[ix["price"]]),
+                   "rating": xfloat(r[ix["rating"]]), "reviews": xfloat(r[ix["reviews"]]) or 0.0,
+                   "fees": xfloat(r[ix["fees"]]), "weight": xfloat(r[ix["weight"]]),
+                   "created": xdate(r[ix["created"]]),
+                   "country": r[ix["country"]].upper(),
+                   "age": xfloat(r[ix["age"]]) if ix["age"] is not None else None}
     prods = list(seen.values())
     counts = {}
     for p in prods:
@@ -201,12 +233,13 @@ def gate2():
     wall_months = med_top10_reviews / (300 * 0.015)
     cnhk = sum(p["rev"] for p in prods if p["country"] in ("CN", "HK")) / total
     today = date.today()
-    fresh = [p for p in prods if (today - p["created"]).days < 365 and p["rev"] > 3000]
-    weak = [p for p in srt if p["rating"] <= 4.3 and p["rev"] >= 2000]
+    fresh = [p for p in prods if p["created"] and (today - p["created"]).days < 365 and p["rev"] > 3000]
+    weak = [p for p in srt if p["rating"] is not None and p["rating"] <= 4.3 and p["rev"] >= 2000]
     low_rev_earners = [p for p in srt if p["reviews"] <= 100 and p["rev"] >= 3000]
-    med_price = statistics.median([p["price"] for p in prods])
-    med_fee_share = statistics.median([p["fees"] / p["price"] for p in prods])
-    med_weight = statistics.median([p["weight"] for p in prods])
+    med_price = statistics.median([p["price"] for p in prods if p["price"]])
+    med_fee_share = statistics.median([p["fees"] / p["price"] for p in prods
+                                       if p["fees"] is not None and p["price"]])
+    med_weight = statistics.median([p["weight"] for p in prods if p["weight"]])
     return {"unique": len(prods), "dupes": dupes, "offNiche": off,
             "top10Rev": top10_rev, "totalRev": total, "topShare": top_share,
             "over500": over500, "medTop10Reviews": med_top10_reviews,
@@ -214,7 +247,12 @@ def gate2():
             "weak": len(weak), "proofOfEntry": len(low_rev_earners),
             "medPrice": med_price, "medFeeShare": med_fee_share,
             "medWeight": med_weight,
-            "hasSellerAgeColumn": any(c.startswith("seller age") for c in h)}
+            "hasSellerAgeColumn": ix["age"] is not None,
+            "sellerAgeFilled": sum(1 for p in prods if p["age"] is not None),
+            "proofOnNewShops": sum(1 for p in low_rev_earners
+                                   if p["age"] is not None and p["age"] <= 18),
+            "freshOnNewShops": sum(1 for p in fresh
+                                   if p["age"] is not None and p["age"] <= 18)}
 
 
 # ------------------------------------------------------------------ Gate 3
@@ -319,6 +357,13 @@ def dossier(values, compliance, budget=6500):
     return {"scores": scores, "score": score, "hard": hard, "verdict": verdict}
 
 
+REAL = {"gate1": "real-gate1-chart.csv", "gate2": "real-gate2-xray.csv"}
+
+
+def real_available():
+    return {k: v for k, v in REAL.items() if os.path.exists(os.path.join(FIX, v))}
+
+
 if __name__ == "__main__":
     g1, g1s, g2, g3 = gate1(), gate1("gate1-seasonal.csv"), gate2(), gate3()
     # niche A: the fixtures as they stand, Gate 0 fully clean, cash need 5000
@@ -328,7 +373,14 @@ if __name__ == "__main__":
               "cash": 5000}
     # niche B: same page, the single-season keyword, and no cash figure typed
     b_vals = dict(a_vals, amp=g1s["amplitude"], top4=g1s["top4"], cash=None)
-    res = {"gate0": {k: gate0(v) for k, v in G0_SCENARIOS.items()},
+    have = real_available()
+    real = {}
+    if "gate1" in have:
+        real["gate1"] = gate1(REAL["gate1"])
+    if "gate2" in have:
+        real["gate2"] = gate2(REAL["gate2"])
+    res = {"real": real,
+           "gate0": {k: gate0(v) for k, v in G0_SCENARIOS.items()},
            "gate1": g1, "gate1seasonal": g1s, "gate2": g2, "gate3": g3, "gate4": gate4(),
            "dossier": {"nicheA": {"values": a_vals, **dossier(a_vals, "YES")},
                        "nicheB": {"values": b_vals, **dossier(b_vals, "YES")},

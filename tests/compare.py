@@ -209,6 +209,44 @@ for i, (a, b) in enumerate(zip(D["afterBcash"]["rows"], ruD["afterBcash"]["rows"
 same("RU check-row count (gate 2)", len(ru["gate2"]["checks"]), len(en["gate2"]["checks"]))
 same("RU check-row count (gate 4)", len(ru["gate4"]["checks"]), len(en["gate4"]["checks"]))
 
+# ---- Real Helium 10 exports, if present. This is the only lane that proves the
+#      PARSING works: real headers ("Price  €"), real thousands separators
+#      ("4,806.42"), real dates ("Nov 27, 2025"), a BOM, blank cells and
+#      sponsored repeats.
+if page.get("real") and mir.get("real"):
+    R, mR = page["real"], mir["real"]
+    same("REAL gate 1 parsed without error", R["g1error"], None)
+    same("REAL gate 2 parsed without error", R["g2error"], None)
+    same("REAL no JS errors", R["pageErrors"], [])
+    eq("REAL G1 amplitude",         R["g1tiles"].get("Amplitude"),         round(mR["gate1"]["amplitude"], 2))
+    eq("REAL G1 consistency",       R["g1tiles"].get("Consistency"),       round(mR["gate1"]["consistency"], 2))
+    eq("REAL G1 seasonal strength", R["g1tiles"].get("Seasonal strength"), round(mR["gate1"]["strength"], 2))
+    eq("REAL G1 top-4 share %",     R["g1tiles"].get("Top-4 share"),       round(mR["gate1"]["top4"] * 100, 1), 0.05)
+    eq("REAL G1 YoY %",             R["g1tiles"].get("YoY"),               round(mR["gate1"]["yoy"] * 100, 1), 0.05)
+    same("REAL G1 ramp month",      R["g1tiles"].get("Ramp month"),        mR["gate1"]["ramp"])
+    eq("REAL G1 months used",       R["g1meta"],                            mR["gate1"]["monthsUsed"])
+    eq("REAL G2 top-10 revenue",       R["g2tiles"].get("Top-10 revenue"),        mR["gate2"]["top10Rev"], 1)
+    eq("REAL G2 top ASIN share %",     R["g2tiles"].get("Top ASIN share"),        round(mR["gate2"]["topShare"] * 100, 1), 0.05)
+    eq("REAL G2 listings >500 reviews", R["g2tiles"].get("Reviews >500"),         mR["gate2"]["over500"])
+    eq("REAL G2 median top-10 reviews", R["g2tiles"].get("Median top-10 reviews"), mR["gate2"]["medTop10Reviews"], 1)
+    eq("REAL G2 CN+HK share %",        R["g2tiles"].get("CN+HK share"),           round(mR["gate2"]["cnhkShare"] * 100), 0.5)
+    eq("REAL G2 median price",         R["g2tiles"].get("Median price"),          mR["gate2"]["medPrice"], 0.005)
+    rmeta = (R["g2meta"] or "").split("·", 1)[-1]
+    rnums = [num(x) for x in re.findall(r"\d[\d.,]*", rmeta)]
+    same("REAL G2 unique listings",              rnums[0] if rnums else None, float(mR["gate2"]["unique"]))
+    same("REAL G2 sponsored duplicates removed", rnums[1] if len(rnums) > 1 else None, float(mR["gate2"]["dupes"]))
+    same("REAL G2 off-niche ads dropped",        rnums[2] if len(rnums) > 2 else None, float(mR["gate2"]["offNiche"]))
+    # the export DOES carry Seller Age, so the shop-age note must state the truth
+    same("REAL G2 export carries Seller Age", mR["gate2"]["hasSellerAgeColumn"], True)
+    fresh_note = next((n["note"] for n in R["g2notes"] if n["label"] and "Fresh entrants" in n["label"]), "")
+    expect = f"{mR['gate2']['freshOnNewShops']} of them on seller accounts under 18 months"
+    ok = expect in fresh_note
+    checks.append((ok, "REAL G2 new-shop count matches the data", fresh_note[-70:], expect))
+    if not ok:
+        fails.append(f"REAL G2 fresh-entrant note does not say '{expect}'")
+else:
+    print("(real Helium 10 exports absent — parsing lane skipped)\n")
+
 # ---- no JS errors on either page
 same("EN page: no JS errors", en["consoleErrors"], [])
 same("RU page: no JS errors", ru["consoleErrors"], [])

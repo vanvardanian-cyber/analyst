@@ -1,3 +1,11 @@
 .DS_Store
 tests/node_modules/
 tests/.out/
+
+# Real Helium 10 exports stay local: they identify the niche under research.
+# The committed fixtures are synthetic; see tests/fixtures/make_fixtures.py.
+tests/fixtures/real-*.csv
+tests/fixtures/Helium_10_*.csv
+tests/fixtures/chart*.csv
+__pycache__/
+*.pyc
