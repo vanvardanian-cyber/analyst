@@ -128,6 +128,60 @@ eq("G4 suggested P10",       g4["tiles"].get("Suggested P10"),        round(m4["
 eq("G4 suggested P90",       g4["tiles"].get("Suggested P90"),        round(m4["p90"]), 1)
 same("G4 overall status",    g4["status"],                            m4["overall"])
 
+# ---- Dossier: the Sheet 5 scorecard, driven through the real UI
+D, mD = en["dossier"], mir["dossier"]
+
+def drow(table, label, section=None):
+    for r in table["rows"]:
+        if r["label"].split(" weight")[0].strip() == label and (section is None or r["section"] == section):
+            return r["cells"]
+    return None
+
+same("D chip after first save",  D["afterA"]["chip"], "1 of 10")
+same("D columns after A",        D["afterA"]["columns"], ["nicheA"])
+same("D niche A weighted score", drow(D["afterA"], "Weighted score (0–100)"), [str(mD["nicheA"]["score"])])
+same("D niche A hard gates",     drow(D["afterA"], "Hard gates"), [mD["nicheA"]["hard"]])
+same("D niche A verdict",        drow(D["afterA"], "Verdict"), [mD["nicheA"]["verdict"]])
+
+# every 0-2 band, criterion by criterion, against Sheet 5's bands
+SCORE_SECTION = "Scores (0–2 each, Sheet 5 bands)"
+DLABELS = ["Page-1 revenue, €/month", "Top ASIN share of page revenue",
+           "Page-1 listings above 500 reviews", "Fresh entrants (<12 mo, >€3k/mo)",
+           "Weak competitor ≤4.3★ to attack", "China + Hong Kong share of page",
+           "Seasonality amplitude", "Top-4 months’ share of the year",
+           "Contribution margin, % of net", "First order + compliance cash, €"]
+for i, label in enumerate(DLABELS):
+    same(f"D band [{label}]", drow(D["afterA"], label, SCORE_SECTION), [str(mD["nicheA"]["scores"][i])])
+
+# niche B: single-season. Blank cash must blank the score (Sheet 5 D32), and once
+# the cash is typed the disqualification must still force DROP (D34).
+same("D columns after B",         D["afterB"]["columns"], ["nicheA", "nicheB"])
+same("D niche B score is blank",  drow(D["afterB"], "Weighted score (0–100)")[1], "—")
+same("D niche B hard gates",      drow(D["afterB"], "Hard gates")[1], mD["nicheB"]["hard"])
+same("D niche B verdict is blank", drow(D["afterB"], "Verdict")[1], "—")
+ok = "cash need" in (D["saveStatusB"] or "")
+checks.append((ok, "D blank input is named in the save status", D["saveStatusB"], "mentions cash need"))
+if not ok:
+    fails.append("D save status did not say which input was blank")
+same("D niche B score once cash typed",
+     drow(D["afterBcash"], "Weighted score (0–100)")[1], str(mD["nicheB_withCash"]["score"]))
+same("D disqualified still DROPs despite score",
+     drow(D["afterBcash"], "Verdict")[1], mD["nicheB_withCash"]["verdict"])
+same("D re-saving a name overwrites, not duplicates", D["afterBcash"]["columns"], ["nicheA", "nicheB"])
+
+# persistence, cap, removal
+same("D survives a reload",          D["afterReload"]["columns"], ["nicheA", "nicheB"])
+same("D holds exactly 10",           len(D["atCap"]["columns"]), 10)
+same("D refuses the 11th",           len(D["afterOverflow"]["columns"]), 10)
+ok = "10" in (D["overflowStatus"] or "")
+checks.append((ok, "D says why the 11th was refused", D["overflowStatus"], "mentions the cap"))
+if not ok:
+    fails.append("D overflow status did not explain the cap")
+same("D print export is one page at 10 niches", D["printPages"], 1)
+same("D print hides the gates",                D["printHidesGates"], True)
+same("D removal drops one column",   len(D["afterDelete"]["columns"]), 9)
+same("D removal drops the right one", "nicheA" in D["afterDelete"]["columns"], False)
+
 # ---- RU parity: every tile that holds a number must hold the SAME number
 ru = page["ru"]
 for gate in ("gate1", "gate2", "gate3", "gate4"):
@@ -144,6 +198,14 @@ same("RU gate0: rows and groups",
      [(q["id"], q["group"]) for q in en["gate0"]["questions"]])
 for name in mir["gate0"]:
     same(f"RU G0 [{name}] status", ru["gate0Runs"][name]["status"], en["gate0Runs"][name]["status"])
+ruD = ru["dossier"]
+same("RU dossier columns", ruD["afterA"]["columns"], D["afterA"]["columns"])
+same("RU dossier row count", len(ruD["afterA"]["rows"]), len(D["afterA"]["rows"]))
+for i, (a, b) in enumerate(zip(D["afterBcash"]["rows"], ruD["afterBcash"]["rows"])):
+    an = [num(c) for c in a["cells"]]
+    bn = [num(c) for c in b["cells"]]
+    if any(v is not None for v in an) or any(v is not None for v in bn):
+        same(f"RU dossier row {i} ({a['label'][:38]})", bn, an)
 same("RU check-row count (gate 2)", len(ru["gate2"]["checks"]), len(en["gate2"]["checks"]))
 same("RU check-row count (gate 4)", len(ru["gate4"]["checks"]), len(en["gate4"]["checks"]))
 

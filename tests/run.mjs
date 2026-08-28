@@ -3,8 +3,9 @@
 // whether those numbers are right — compare.py judges them against mirror.py.
 import { chromium } from "playwright-core";
 import fs from "node:fs";
+import http from "node:http";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.dirname(HERE);
@@ -67,12 +68,32 @@ const scrape = () => {
   };
 };
 
+const dossierTable = () => {
+  const t = document.querySelector("#d_out table.dtable");
+  if (!t) return null;
+  let section = "";
+  const rows = [];
+  for (const tr of t.querySelectorAll("tbody tr")) {
+    if (tr.classList.contains("sect")) { section = tr.textContent.trim(); continue; }
+    const tds = [...tr.querySelectorAll("td")];
+    rows.push({ section, label: tds[0].textContent.trim(),
+                cells: tds.slice(1).map(td => td.textContent.trim()) });
+  }
+  return {
+    chip: document.querySelector("#dossier .gchip").textContent.trim(),
+    columns: [...t.querySelectorAll("thead th")].slice(1).map(th => th.textContent.replace("✕", "").trim()),
+    rows,
+  };
+};
+
 async function runPage(browser, htmlPath, label) {
   const page = await browser.newPage();
   const consoleErrors = [];
   page.on("pageerror", e => consoleErrors.push(String(e)));
   page.on("console", m => { if (m.type() === "error") consoleErrors.push(m.text()); });
-  await page.goto(pathToFileURL(htmlPath).href, { waitUntil: "domcontentloaded" });
+  await page.goto(BASE + htmlPath, { waitUntil: "domcontentloaded" });
+  await page.evaluate(() => localStorage.clear());
+  await page.reload({ waitUntil: "domcontentloaded" });
 
   // Gate 0 answer scenarios — clicked through the real buttons, one page, reset between.
   const G0_SCENARIOS = JSON.parse(fs.readFileSync(path.join(HERE, "fixtures", "gate0-scenarios.json"), "utf8"));
@@ -111,6 +132,57 @@ async function runPage(browser, htmlPath, label) {
 
   const data = await page.evaluate(scrape);
   data.gate0Runs = gate0Runs;
+
+  // ---- dossier ----------------------------------------------------------
+  const dossier = {};
+  await page.fill("#d_cash", "5000");
+  await page.fill("#d_name", "nicheA");
+  await page.click("#d_save");
+  dossier.afterA = await page.evaluate(dossierTable);
+
+  // same page and economics, but the single-season keyword and no cash typed
+  await page.setInputFiles("#file", FIX("gate1-seasonal.csv"));
+  await page.waitForFunction(() => /adventskalender/.test(document.querySelector("#out .cardtitle").textContent));
+  await page.fill("#d_cash", "");
+  await page.fill("#d_name", "nicheB");
+  await page.click("#d_save");
+  dossier.afterB = await page.evaluate(dossierTable);
+  dossier.saveStatusB = await page.textContent("#d_status");
+
+  // typing the cash figure and re-saving must overwrite, not duplicate
+  await page.fill("#d_cash", "5000");
+  await page.fill("#d_name", "nicheB");
+  await page.click("#d_save");
+  dossier.afterBcash = await page.evaluate(dossierTable);
+
+  // survives a reload
+  await page.reload({ waitUntil: "domcontentloaded" });
+  dossier.afterReload = await page.evaluate(dossierTable);
+
+  // cap: fill to DMAX, then one more must refuse
+  for (let i = 3; i <= 10; i++) {
+    await page.fill("#d_name", "filler" + i);
+    await page.click("#d_save");
+  }
+  dossier.atCap = await page.evaluate(dossierTable);
+  await page.fill("#d_name", "overflow");
+  await page.click("#d_save");
+  dossier.overflowStatus = await page.textContent("#d_status");
+  dossier.afterOverflow = await page.evaluate(dossierTable);
+
+  // the print export must stay one A4 landscape sheet at a full dossier
+  const pdf = await page.pdf({ landscape: true, format: "A4", printBackground: true });
+  const body = pdf.toString("latin1");
+  dossier.printPages = (body.match(/\/Type\s*\/Page[^s]/g) || []).length;
+  dossier.printHidesGates = await page.evaluate(() => {
+    const s = [...document.styleSheets[0].cssRules].find(r => r.conditionText && r.conditionText.includes("print"));
+    return !!s && /gate\):not\(#dossier\)|\.gate:not\(#dossier\)/.test(s.cssText);
+  });
+
+  // removing a column
+  await page.click("#d_out .del[data-i='0']");
+  dossier.afterDelete = await page.evaluate(dossierTable);
+  data.dossier = dossier;
   // ignore the CDN fetch failure that file:// causes for the (unused) xlsx lib
   data.consoleErrors = consoleErrors.filter(e => !/xlsx|cloudflare|ERR_/i.test(e));
   data.label = label;
@@ -118,15 +190,33 @@ async function runPage(browser, htmlPath, label) {
   return data;
 }
 
+// The dossier writes to localStorage, which needs a real origin, so the pages
+// are served over http exactly as Vercel serves them.
+const MIME = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript", ".json": "application/json" };
+const server = http.createServer((req, res) => {
+  if (req.url === "/favicon.ico") { res.writeHead(204).end(); return; }   // not a page bug
+  let rel = decodeURIComponent(req.url.split("?")[0]);
+  if (rel.endsWith("/")) rel += "index.html";
+  const file = path.join(ROOT, rel);
+  if (!file.startsWith(ROOT) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
+    res.writeHead(404).end("not found"); return;
+  }
+  res.writeHead(200, { "content-type": MIME[path.extname(file)] || "application/octet-stream" });
+  res.end(fs.readFileSync(file));
+});
+await new Promise(r => server.listen(0, "127.0.0.1", r));
+const BASE = `http://127.0.0.1:${server.address().port}`;
+
 const exe = browserPath();
 if (!exe) { console.error("No Chromium/Chrome binary found. Install Chrome, or set one of:\n" + CANDIDATE_BROWSERS.join("\n")); process.exit(2); }
 const browser = await chromium.launch({ executablePath: exe, headless: true });
 const results = {
   browser: exe,
-  en: await runPage(browser, path.join(ROOT, "tools/seasonality/index.html"), "EN"),
-  ru: await runPage(browser, path.join(ROOT, "tools/seasonality/ru/index.html"), "RU"),
+  en: await runPage(browser, "/tools/seasonality/", "EN"),
+  ru: await runPage(browser, "/tools/seasonality/ru/", "RU"),
 };
 await browser.close();
+server.close();
 fs.mkdirSync(OUT, { recursive: true });
 fs.writeFileSync(path.join(OUT, "page.json"), JSON.stringify(results, null, 2));
 console.log("page.json written · EN gate chips:",

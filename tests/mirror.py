@@ -81,10 +81,10 @@ G0_SCENARIOS = {
 
 
 # ------------------------------------------------------------------ Gate 1
-def gate1(now=None):
+def gate1(fixture="gate1-search-volume.csv", now=None):
     now = now or date.today()
     cur_key = "%04d-%02d" % (now.year, now.month)
-    rows = read_csv("gate1-search-volume.csv")
+    rows = read_csv(fixture)
     acc = {}
     for r in rows[1:]:
         d = datetime.strptime(r[0], "%Y-%m-%d").date()
@@ -272,9 +272,68 @@ def gate4(landed=12.93, disc=3.0, spend=24.0, max_push=1000.0):
             "overall": overall}
 
 
+
+# ------------------------------------------------------------------ Dossier
+# Workbook Sheet 5 rows 21-34. Weights sum to 1.00; score = SUMPRODUCT/2*100
+# rounded half-up (Excel ROUND, which is also JS Math.round), blank until all
+# ten inputs exist (D32 guards on COUNT(D21:D30)<10).
+DCRIT = [
+    ("rev",    0.15, lambda v, b: 2 if v >= 40000 else 1 if v >= 20000 else 0),
+    ("share",  0.10, lambda v, b: 2 if v < 0.30 else 1 if v <= 0.40 else 0),
+    ("moat",   0.10, lambda v, b: 2 if v <= 2 else 1 if v <= 4 else 0),
+    ("fresh",  0.10, lambda v, b: 2 if v >= 2 else 1 if v >= 1 else 0),
+    ("weak",   0.10, lambda v, b: 2 if v == 1 else 0),
+    ("cnhk",   0.05, lambda v, b: 2 if v < 0.40 else 1 if v < 0.60 else 0),
+    ("amp",    0.15, lambda v, b: 2 if v < 1.5 else 1 if v < 2.5 else 0),
+    ("top4",   0.05, lambda v, b: 2 if v < 0.45 else 1 if v < 0.60 else 0),
+    ("margin", 0.15, lambda v, b: 2 if v >= 0.35 else 1 if v >= 0.30 else 0),
+    ("cash",   0.05, lambda v, b: 2 if v <= 0.8 * b else 1 if v <= b else 0),
+]
+
+
+def dossier(values, compliance, budget=6500):
+    scores = [None if values.get(k) is None else f(values[k], budget) for k, _, f in DCRIT]
+    if any(x is None for x in scores):
+        score = None
+    else:
+        acc = 0.0
+        for (k, w, _), sc in zip(DCRIT, scores):   # same order as the page sums them
+            acc += w * sc
+        score = math.floor(acc / 2 * 100 + 0.5)
+    if compliance == "NO":
+        hard, disq = "DISQUALIFIED: compliance", True
+    elif values.get("amp") is None:
+        hard, disq = "\u2014", False
+    elif values["amp"] >= 4:
+        hard, disq = "DISQUALIFIED: single-season", True
+    elif compliance is None:
+        hard, disq = "OK \u2014 Gate 0 unanswered", False
+    else:
+        hard, disq = "OK", False
+    if score is None:
+        verdict = ""
+    elif disq:
+        verdict = "DROP"
+    else:
+        verdict = "INVESTIGATE" if score >= 70 else "PARK" if score >= 50 else "DROP"
+    return {"scores": scores, "score": score, "hard": hard, "verdict": verdict}
+
+
 if __name__ == "__main__":
+    g1, g1s, g2, g3 = gate1(), gate1("gate1-seasonal.csv"), gate2(), gate3()
+    # niche A: the fixtures as they stand, Gate 0 fully clean, cash need 5000
+    a_vals = {"rev": g2["top10Rev"], "share": g2["topShare"], "moat": g2["over500"],
+              "fresh": g2["fresh"], "weak": 1 if g2["weak"] else 0, "cnhk": g2["cnhkShare"],
+              "amp": g1["amplitude"], "top4": g1["top4"], "margin": g3["cm"] / g3["net"],
+              "cash": 5000}
+    # niche B: same page, the single-season keyword, and no cash figure typed
+    b_vals = dict(a_vals, amp=g1s["amplitude"], top4=g1s["top4"], cash=None)
     res = {"gate0": {k: gate0(v) for k, v in G0_SCENARIOS.items()},
-           "gate1": gate1(), "gate2": gate2(), "gate3": gate3(), "gate4": gate4()}
+           "gate1": g1, "gate1seasonal": g1s, "gate2": g2, "gate3": g3, "gate4": gate4(),
+           "dossier": {"nicheA": {"values": a_vals, **dossier(a_vals, "YES")},
+                       "nicheB": {"values": b_vals, **dossier(b_vals, "YES")},
+                       "nicheB_withCash": {**dossier(dict(b_vals, cash=5000), "YES")},
+                       "budget": 6500}}
     # the browser driver replays exactly these answer sets
     with open(os.path.join(FIX, "gate0-scenarios.json"), "w") as f:
         json.dump(G0_SCENARIOS, f, indent=2)

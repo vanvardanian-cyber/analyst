@@ -33,6 +33,25 @@ def gate1():
         d += timedelta(days=7)
     return rows
 
+# A single-season niche: amplitude far above 4, which Sheet 5 D33 disqualifies
+# outright and Gate 1 calls a working-capital trap.
+SEASONAL = [820, 700, 640, 600, 610, 660, 730, 910, 1240, 2280, 6600, 9100]
+
+
+def gate1_seasonal():
+    start = date(2023, 8, 7)
+    rows = [["Date", "adventskalender befüllbar"]]
+    d = start
+    while True:
+        mi = (d.year * 12 + d.month) - (start.year * 12 + start.month)
+        if mi >= 36:
+            break
+        # mild year-on-year growth so the years still agree with each other
+        rows.append([d.isoformat(), round(SEASONAL[d.month - 1] * (1 + 0.04 * (mi // 12)))])
+        d += timedelta(days=7)
+    return rows
+
+
 # ---------------------------------------------------------------- Gate 2
 # Helium 10 Xray, search-results view. Column names are the real ones.
 # NOTE: a real Xray export has NO "Seller Age" column — that absence is
@@ -106,5 +125,6 @@ def write(name, rows):
 
 if __name__ == "__main__":
     write("gate1-search-volume.csv", gate1())
+    write("gate1-seasonal.csv", gate1_seasonal())
     write("gate2-xray.csv", gate2())
     write("gate4-cerebro.csv", gate4())

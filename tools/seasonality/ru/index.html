@@ -115,6 +115,45 @@
   .form input { width:100%; margin-top:3px; padding:7px 9px; font:14px inherit; color:var(--ink-1);
                 background:var(--page); border:1px solid var(--baseline); border-radius:8px; }
   .form input:focus { outline:none; border-color:var(--series-1); }
+  /* dossier */
+  .dscroll { overflow-x: auto; margin-top: 14px; }
+  .dtable { border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .dtable th, .dtable td { border: 1px solid var(--grid); padding: 5px 9px; text-align: right; white-space: nowrap; }
+  .dtable th:first-child, .dtable td:first-child { text-align: left; white-space: normal; min-width: 210px; }
+  .dtable thead th { background: var(--page); font-weight: 600; }
+  .dtable tr.sect td { background: var(--page); text-align: left; font-size: 10.5px; font-weight: 600;
+                       text-transform: uppercase; letter-spacing: .05em; color: var(--ink-muted); }
+  .dtable td.miss { color: var(--ink-muted); }
+  .dtable td.s0 { color: var(--critical); } .dtable td.s1 { color: #8a6100; } .dtable td.s2 { color: var(--good); }
+  .dtable tr.total td { font-weight: 650; border-top-width: 2px; }
+  .dtable .w { color: var(--ink-muted); font-weight: 400; font-size: 11px; }
+  .dtable .src { color: var(--ink-muted); font-weight: 400; font-size: 11px; }
+  .dtable .del { border: none; background: none; color: var(--ink-muted); cursor: pointer; font-size: 13px; padding: 0 0 0 6px; }
+  .dtable .del:hover { color: var(--critical); }
+  .vd-INVESTIGATE { color: var(--good); font-weight: 650; }
+  .vd-PARK { color: #8a6100; font-weight: 650; }
+  .vd-DROP { color: var(--critical); font-weight: 650; }
+  .printonly { display: none; }
+  /* one A4 landscape sheet, up to ten niches wide */
+  @media print {
+    @page { size: A4 landscape; margin: 8mm; }
+    body { background: #fff; }
+    header, .steps, footer, #tip, .nexthint, .gate:not(#dossier),
+    #dossier .card, #dossier .gchip, #dossier .privacy { display: none !important; }
+    .wrap { max-width: none; padding: 0; }
+    .printonly { display: block; font-size: 8.5px; color: #52514e; margin-bottom: 4px; }
+    #dossier { margin: 0; }
+    #dossier > h2 { font-size: 13px; margin: 0 0 1px; }
+    #dossier > p.gsub { font-size: 8px; margin: 0 0 5px; }
+    .dscroll { overflow: visible; }
+    .dtable { font-size: 7.6px; line-height: 1.25; width: 100%; table-layout: fixed; }
+    .dtable th, .dtable td { padding: 1px 4px; white-space: normal; word-break: break-word; }
+    .dtable th:first-child, .dtable td:first-child { min-width: 0; width: 22%; }
+    .dtable .w, .dtable .src { font-size: 6.8px; }
+    .dtable .del { display: none; }
+    .dtable tr { break-inside: avoid; }
+    #d_out > .meta { font-size: 7px; margin-top: 4px; }
+  }
   footer { margin-top: 40px; font-size: 12.5px; color: var(--ink-muted); }
   footer ol { padding-left: 18px; }
 </style>
@@ -237,6 +276,28 @@
     <div class="nexthint" id="hint4"></div>
   </section>
 
+  <!-- ============ DOSSIER ============ -->
+  <section class="gate" id="dossier">
+    <h2>Досье — сравнение ниш <span class="gchip">пусто</span></h2>
+    <p class="gsub">Лист 5 книги в виде программы. Сохраните пройденную воронку под именем ниши и сравнивайте до 10 штук рядом. Балл расставляет приоритет исследования — решение «идём / не идём» остаётся за Этапами 0–4, а не за этим числом.</p>
+    <p class="privacy" style="margin-bottom:0"><b>Сохраняется только на этом устройстве.</b> Досье лежит в локальном хранилище этого браузера. Ничего не загружается; очистка данных браузера очистит и досье.</p>
+    <div class="card">
+      <div class="form">
+        <label>Ниша / ключ<input id="d_name" type="text" placeholder="напр. schubladen organizer küche"></label>
+        <label>Деньги на первый заказ + комплаенс (€)<input id="d_cash" type="number" step="100" placeholder="книга, Листы 6+8"></label>
+        <label>Бюджет с резервом на дозаказ (€)<input id="d_budget" type="number" step="100" value="6500"></label>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn" id="d_save" type="button">Сохранить нишу</button>
+        <button class="btn" id="d_print" type="button">Печать / сохранить в PDF</button>
+      </div>
+      <div class="status" id="d_status"></div>
+      <div class="meta" style="margin-top:10px">Всё, кроме потребности в деньгах, берётся из этапов выше в их текущем состоянии. Ниша, сохранённая до прохождения этапа, оставляет эту строку пустой, а пустой ввод оставляет пустым балл — то же правило, что в Листе 5.</div>
+    </div>
+    <div class="printonly" id="d_printhead"></div>
+    <div id="d_out"></div>
+  </section>
+
   <footer>
     <b>Где взять файлы:</b>
     <ol>
@@ -270,6 +331,7 @@ function pearson(a,b){
 /* ---------- gate status machinery ---------- */
 const RANK = { green:0, yellow:1, red:2 };
 const gateState = { 0:null, 1:null, 2:null, 3:null, 4:null };
+const funnel = { g0:null, g1:null, g2:null, g3:null, g4:null };   // what the dossier reads
 function setGate(n, status){                        // status: "green"|"yellow"|"red"
   gateState[n] = status;
   const g = $("#gate"+n), s = $("#step"+n);
@@ -423,7 +485,7 @@ function g0verdict(){
       + (failA.some(q=>q.id==="ip") ? " По строке про права: если НЕТ потому, что вы не проверяли — сначала проверьте (EUIPO eSearch, реестр DPMA, Google Patents), эта строка ещё может закрыться. Если вы нашли блокирующие права — не закроется." : "")];
   } else if (answered.length < G0Q.length){
     $("#g0v").innerHTML = "";
-    g0result = null;
+    g0result = null; funnel.g0 = null;
     clearGate(0);                                   // incomplete is "not run", not the last verdict
     return;
   } else if (failB.length || failBrand){
@@ -437,6 +499,7 @@ function g0verdict(){
     v = ["good","ЧИСТО","Здесь нишу ничто не убивает: исключений по регулируемым товарам нет, обязанности продавца закрыты, покупатель может вернуться за вторым товаром. Теперь выясните, нужно ли это кому-нибудь — Этап 1."];
   }
   g0result = { status, answers: {...g0ans}, blockAyes, failA: failA.map(q=>q.id), failB: failB.map(q=>q.id), brand: g0ans.brand || null };
+  funnel.g0 = g0result;
   $("#g0v").innerHTML = verdictHTML(v);
   setGate(0, status);
 }
@@ -663,6 +726,11 @@ function render(results){
       b.addEventListener("mouseleave", ()=> $("#tip").style.display="none");
     });
   }
+  const p1 = results[0];
+  funnel.g1 = { keyword: p1.name, amp: p1.amp, top4: p1.top4, yoy: p1.yoy,
+                consistency: p1.consistency, strength: p1.strength,
+                ramp: p1.ramp==null ? null : MONTHS[p1.ramp], months: p1.months.length,
+                series: results.length };
   setGate(1, ["green","yellow","red"][worst]);
 }
 
@@ -873,6 +941,10 @@ function renderXray(res, fileName){
       ${a.sorted.slice(0,10).map(p=>`<tr><td>${p.brand||"—"}</td><td>${p.asin}</td><td>${fmt0(p.rev)}</td><td>${fmt0(p.reviews)}</td><td>${p.rating??"—"}</td><td>${p.country||"—"}</td></tr>`).join("")}
     </table></details>`;
   out.appendChild(card);
+  funnel.g2 = { top10Rev: a.top10Rev, topShare: a.topShare, over500: a.over500,
+                fresh: a.fresh.length, weak: a.weak.length ? 1 : 0, cnhkShare: a.cnhkShare,
+                wallMonths: a.wallMonths, medPrice: a.medPrice, medWeight: a.medWeight,
+                listings: a.n };
   setGate(2, overall);
 }
 async function handleXray(file){
@@ -919,6 +991,7 @@ function calcUnitEcon(touched){
   else if (margin >= 0.30) v3 = ["warning","ТОНКО","30–35%: сработает только при удачном запуске. Продавите поставщика ниже €"+Math.max(0,maxExw).toFixed(2)+" EXW или поднимите цену."];
   else v3 = ["critical","МАРЖИ НЕ ХВАТАЕТ","Ниже 30% до рекламы нет места ни для PPC, ни для всплесков возвратов, ни для роста комиссий. Меняйте цену, поставщика или товар."];
   $("#g3v").innerHTML = verdictHTML(v3);
+  funnel.g3 = { price, net, payout, landed, cm, margin, beAcos, maxExw };
   if (touched) setGate(3, v3[0]==="good" ? "green" : v3[0]==="warning" ? "yellow" : "red");
 }
 
@@ -1009,6 +1082,9 @@ function renderCerebro(){
       : ["critical","ДВЕРЕЙ С РЕАЛЬНЫМ СПРОСОМ НЕТ","Каждый ключ — либо хайп-всплеск, либо ключ зевак: много поисков, мало покупок. Спрос в нише слабее, чем притворяется её поисковый объём. Перепроверьте Этапом 1, прежде чем тратить что-либо."])}
     <div class="meta" style="margin-top:10px">Поисков на продажу = поисковый объём ÷ атрибутированные покупки: ≤20 сильный · 20–60 нормальный · 60–120 слабый · >120 зеваки. Тренд ≥+200% = флаг хайпа → проверьте форму Этапом 1. Рекомендованные P10/P90 переносите в Лист 6 книги после сверки с Xray.</div>
   </div>`;
+  funnel.g4 = { best: best ? best.kw : null, push: best ? best.push : null,
+                sps: best ? best.sps : null, totalSales,
+                p10: totalSales*0.04*12, p90: totalSales*0.15*12, keywords: enriched.length };
   setGate(4, overall);
 }
 async function handleCerebro(file){
@@ -1019,6 +1095,180 @@ async function handleCerebro(file){
     st.textContent = "";
     renderCerebro();
   } catch (e){ st.className = "status err"; st.textContent = "⚠ " + e.message; }
+}
+
+/* ================================================================
+   DOSSIER — workbook Sheet 5 as software
+   Criteria, weights, bands, score, hard gates and verdict thresholds are
+   Sheet 5 rows 8-34 unchanged. Sheet 5 holds 8 columns; this holds 10.
+   ================================================================ */
+const DKEY = "easestore.dossier.v1";
+const DVLABEL = { INVESTIGATE:"ИЗУЧАТЬ", PARK:"ОТЛОЖИТЬ", DROP:"ОТБРОСИТЬ" };
+const DMAX = 10;
+const DCRIT = [
+  { id:"rev",    label:"Выручка страницы 1, €/мес",             src:"Этап 2", w:0.15,
+    band:v=>v>=40000?2:v>=20000?1:0,        fmt:v=>"€"+fmt0(v) },
+  { id:"share",  label:"Доля топ-ASIN в выручке страницы",      src:"Этап 2", w:0.10,
+    band:v=>v<0.30?2:v<=0.40?1:0,           fmt:v=>(v*100).toFixed(1)+"%" },
+  { id:"moat",   label:"Листингов страницы 1 с 500+ отзывами",   src:"Этап 2", w:0.10,
+    band:v=>v<=2?2:v<=4?1:0,                fmt:v=>fmt0(v) },
+  { id:"fresh",  label:"Новые входы (<12 мес, >€3k/мес)",    src:"Этап 2", w:0.10,
+    band:v=>v>=2?2:v>=1?1:0,                fmt:v=>fmt0(v) },
+  { id:"weak",   label:"Слабый конкурент ≤4.3★ для атаки",     src:"Этап 2", w:0.10,
+    band:v=>v===1?2:0,                      fmt:v=>v===1?"да":"нет" },
+  { id:"cnhk",   label:"Доля Китая и Гонконга на странице",     src:"Этап 2", w:0.05,
+    band:v=>v<0.40?2:v<0.60?1:0,            fmt:v=>(v*100).toFixed(0)+"%" },
+  { id:"amp",    label:"Амплитуда сезонности",               src:"Этап 1", w:0.15,
+    band:v=>v<1.5?2:v<2.5?1:0,              fmt:v=>fmt(v) },
+  { id:"top4",   label:"Доля топ-4 месяцев в году",     src:"Этап 1", w:0.05,
+    band:v=>v<0.45?2:v<0.60?1:0,            fmt:v=>(v*100).toFixed(1)+"%" },
+  { id:"margin", label:"Маржинальный доход, % от нетто",       src:"Этап 3", w:0.15,
+    band:v=>v>=0.35?2:v>=0.30?1:0,          fmt:v=>(v*100).toFixed(1)+"%" },
+  { id:"cash",   label:"Деньги на первый заказ + комплаенс, €",    src:"вручную",  w:0.05,
+    band:(v,b)=>v<=0.8*b?2:v<=b?1:0,        fmt:v=>"€"+fmt0(v) },
+];
+function dLoad(){
+  try { const raw = localStorage.getItem(DKEY); if (!raw) return { niches:[], budget:6500 };
+        const d = JSON.parse(raw); return { niches: Array.isArray(d.niches)?d.niches:[], budget: d.budget||6500 };
+  } catch(e){ return { niches:[], budget:6500 }; }
+}
+function dSave(d){
+  try { localStorage.setItem(DKEY, JSON.stringify(d)); return true; }
+  catch(e){ return false; }
+}
+function dCapture(name, cash){
+  const g1 = funnel.g1, g2 = funnel.g2, g3 = funnel.g3, g4 = funnel.g4, g0 = funnel.g0;
+  return {
+    name,
+    saved: new Date().toISOString().slice(0,10),
+    v: { rev:    g2 ? g2.top10Rev  : null,
+         share:  g2 ? g2.topShare  : null,
+         moat:   g2 ? g2.over500   : null,
+         fresh:  g2 ? g2.fresh     : null,
+         weak:   g2 ? g2.weak      : null,
+         cnhk:   g2 ? g2.cnhkShare : null,
+         amp:    g1 ? g1.amp       : null,
+         top4:   g1 ? g1.top4      : null,
+         margin: g3 ? g3.margin    : null,
+         cash:   cash },
+    compliance: g0 ? (g0.blockAyes === 9 ? "YES" : "NO") : null,
+    ctx: { keyword: g1 ? g1.keyword : null, yoy: g1 ? g1.yoy : null,
+           consistency: g1 ? g1.consistency : null, strength: g1 ? g1.strength : null,
+           wallMonths: g2 ? g2.wallMonths : null, medPrice: g2 ? g2.medPrice : null,
+           medWeight: g2 ? g2.medWeight : null, landed: g3 ? g3.landed : null,
+           beAcos: g3 ? g3.beAcos : null, bestKw: g4 ? g4.best : null,
+           push: g4 ? g4.push : null, p10: g4 ? g4.p10 : null, p90: g4 ? g4.p90 : null,
+           gates: { 0:gateState[0], 1:gateState[1], 2:gateState[2], 3:gateState[3], 4:gateState[4] } },
+  };
+}
+function dScores(n, budget){
+  return DCRIT.map(c => {
+    const v = n.v[c.id];
+    return (v==null || !isFinite(v)) ? null : c.band(v, budget);
+  });
+}
+function dScore(n, budget){                       // Sheet 5 D32: blank until all ten are present
+  const sc = dScores(n, budget);
+  if (sc.some(x => x==null)) return null;
+  return Math.round(DCRIT.reduce((a,c,i)=>a + c.w*sc[i], 0) / 2 * 100);
+}
+function dHard(n){                                // Sheet 5 D33 — [label, colour, disqualifies]
+  if (n.compliance === "NO")  return ["ДИСКВАЛИФИКАЦИЯ: комплаенс", "red", true];
+  if (n.v.amp == null)        return ["—", null, false];
+  if (n.v.amp >= 4)           return ["ДИСКВАЛИФИКАЦИЯ: один сезон", "red", true];
+  // Sheet 5 treats a blank compliance cell as "not NO", so it must not drop the
+  // niche — but silence is not a pass either, so it is shown, not swallowed.
+  if (n.compliance == null)   return ["OK — Этап 0 без ответов", "yellow", false];
+  return ["OK", "green", false];
+}
+function dVerdict(n, budget){                     // Sheet 5 D34
+  const score = dScore(n, budget);
+  if (score == null) return "";
+  if (dHard(n)[2]) return "DROP";
+  return score >= 70 ? "INVESTIGATE" : score >= 50 ? "PARK" : "DROP";
+}
+function dRender(){
+  const d = dLoad(), budget = d.budget, ns = d.niches;
+  $("#dossier .gchip").textContent = ns.length ? ns.length + " из " + DMAX : "пусто";
+  $("#d_printhead").textContent = "EaseStore · Досье воронки ниш · " + ns.length +
+      " ниш" + (ns.length===1?"а":"") + " · бюджет €" + fmt0(budget) + " · напечатано " + new Date().toISOString().slice(0,10);
+  const out = $("#d_out");
+  if (!ns.length){ out.innerHTML = '<div class="card"><div class="meta" style="margin:0">Пока не сохранено ни одной ниши. Пройдите этапы выше, введите имя и нажмите «Сохранить нишу».</div></div>'; return; }
+  const cell = (v, cls) => `<td class="${cls||""}">${v}</td>`;
+  const miss = '<span class="miss">—</span>';
+  let rows = "";
+  rows += `<tr class="sect"><td colspan="${ns.length+1}">Входные данные</td></tr>`;
+  for (const c of DCRIT){
+    rows += `<tr><td>${c.label} <span class="src">${c.src}</span></td>` +
+      ns.map(n => { const v = n.v[c.id];
+        return cell(v==null||!isFinite(v) ? miss : c.fmt(v), v==null?"miss":""); }).join("") + "</tr>";
+  }
+  rows += `<tr><td>Блок A комплаенса пройден? <span class="src">Этап 0</span></td>` +
+    ns.map(n => cell(n.compliance || miss, n.compliance ? "" : "miss")).join("") + "</tr>";
+  rows += `<tr class="sect"><td colspan="${ns.length+1}">Баллы (0–2 каждый, диапазоны Листа 5)</td></tr>`;
+  DCRIT.forEach((c,i) => {
+    rows += `<tr><td>${c.label} <span class="w">вес ${c.w.toFixed(2)}</span></td>` +
+      ns.map(n => { const sc = dScores(n, budget)[i];
+        return cell(sc==null ? miss : sc, sc==null ? "miss" : "s"+sc); }).join("") + "</tr>";
+  });
+  rows += `<tr class="total"><td>Взвешенный балл (0–100)</td>` +
+    ns.map(n => { const sc = dScore(n, budget); return cell(sc==null ? miss : sc, sc==null?"miss":""); }).join("") + "</tr>";
+  rows += `<tr><td>Жёсткие ворота</td>` +
+    ns.map(n => { const [h,col] = dHard(n); return cell(h, col==="red"?"s0":col==="yellow"?"s1":col==="green"?"s2":"miss"); }).join("") + "</tr>";
+  rows += `<tr class="total"><td>Вердикт</td>` +
+    ns.map(n => { const v = dVerdict(n, budget); return cell(v ? `<span class="vd-${v}">${DVLABEL[v]}</span>` : miss, v?"":"miss"); }).join("") + "</tr>";
+  rows += `<tr class="sect"><td colspan="${ns.length+1}">Контекст — не оценивается</td></tr>`;
+  const ctxRow = (label, fn) => { rows += `<tr><td>${label}</td>` +
+      ns.map(n => { const v = fn(n); return cell(v==null ? miss : v, v==null?"miss":""); }).join("") + "</tr>"; };
+  ctxRow("Ключ, разобранный Этапом 1",  n => n.ctx.keyword);
+  ctxRow("Направление YoY",            n => n.ctx.yoy==null ? null : (n.ctx.yoy>0?"+":"")+(n.ctx.yoy*100).toFixed(1)+"%");
+  ctxRow("Согласованность лет",         n => n.ctx.consistency==null ? null : fmt(n.ctx.consistency));
+  ctxRow("Стена отзывов, месяцев",      n => n.ctx.wallMonths==null ? null : fmt0(n.ctx.wallMonths));
+  ctxRow("Медианная цена страницы",        n => n.ctx.medPrice==null ? null : "€"+n.ctx.medPrice.toFixed(2));
+  ctxRow("Медианный вес, кг",        n => n.ctx.medWeight==null ? null : n.ctx.medWeight.toFixed(1));
+  ctxRow("Безубыточный ACOS",           n => n.ctx.beAcos==null ? null : (n.ctx.beAcos*100).toFixed(1)+"%");
+  ctxRow("Лучший ключ для запуска",      n => n.ctx.bestKw);
+  ctxRow("Цена разгона до страницы 1",      n => n.ctx.push==null ? null : "€"+fmt0(n.ctx.push));
+  ctxRow("Размер заказа P10 / P90",     n => n.ctx.p10==null ? null : fmt0(n.ctx.p10)+" / "+fmt0(n.ctx.p90));
+  ctxRow("Цвета этапов 0–4",         n => [0,1,2,3,4].map(i => ({green:"G",yellow:"Y",red:"R"}[n.ctx.gates[i]] || "·")).join(" "));
+  ctxRow("Сохранено",                    n => n.saved);
+  out.innerHTML = `<div class="dscroll"><table class="dtable">
+    <thead><tr><th>Критерий</th>${ns.map((n,i)=>`<th>${n.name}<button class="del" data-i="${i}" title="Убрать эту нишу">✕</button></th>`).join("")}</tr></thead>
+    <tbody>${rows}</tbody></table></div>
+    <div class="meta" style="margin-top:10px">Диапазоны, веса и пороги — строки 21–34 Листа 5 книги без изменений: ≥70 изучать · 50–69 отложить · &lt;50 отбросить · любая ДИСКВАЛИФИКАЦИЯ отбрасывает независимо от балла. Балл пуст, пока нет всех десяти входов — ровно как в D32 Листа 5. Бюджет €${fmt0(budget)} — знаменатель проверки на деньги (C4 Листа 5).</div>`;
+  out.querySelectorAll(".del").forEach(b => b.addEventListener("click", ()=>{
+    const dd = dLoad(); dd.niches.splice(+b.dataset.i, 1); dSave(dd); dRender();
+  }));
+}
+function dInit(){
+  const d = dLoad();
+  $("#d_budget").value = d.budget;
+  $("#d_save").addEventListener("click", ()=>{
+    const st = $("#d_status"); st.className = "status";
+    const name = $("#d_name").value.trim() || (funnel.g1 ? funnel.g1.keyword : "");
+    if (!name){ st.className = "status err"; st.textContent = "⚠ Сначала дайте нише имя."; return; }
+    const dd = dLoad();
+    dd.budget = parseFloat($("#d_budget").value) || 6500;
+    const cashRaw = $("#d_cash").value.trim();
+    const rec = dCapture(name, cashRaw === "" ? null : (parseFloat(cashRaw) || 0));
+    const at = dd.niches.findIndex(n => n.name.toLowerCase() === name.toLowerCase());
+    if (at >= 0) dd.niches[at] = rec;
+    else if (dd.niches.length >= DMAX){
+      st.className = "status err";
+      st.textContent = "⚠ Досье вмещает " + DMAX + " ниш. Уберите одну через ✕, прежде чем сохранять следующую.";
+      return;
+    } else dd.niches.push(rec);
+    if (!dSave(dd)){ st.className = "status err"; st.textContent = "⚠ Не удалось записать в локальное хранилище — приватный режим или переполнена квота."; return; }
+    const blanks = DCRIT.filter(c => rec.v[c.id] == null).map(c => c.src === "вручную" ? "деньги" : c.src);
+    st.textContent = (at>=0 ? "Обновлено «" : "Сохранено «") + name + "»." +
+      (blanks.length ? " Пусто: " + [...new Set(blanks)].join(", ") + " — балл останется пустым, пока их нет." : "");
+    dRender();
+  });
+  $("#d_budget").addEventListener("input", ()=>{
+    const dd = dLoad(); dd.budget = parseFloat($("#d_budget").value) || 6500; dSave(dd); dRender();
+  });
+  $("#d_print").addEventListener("click", ()=> window.print());
+  dRender();
 }
 
 /* ---------- wiring ---------- */
@@ -1057,6 +1307,7 @@ $("#demo4").addEventListener("click", e => {
   handleCerebro(new File([csv], "cerebro-example.csv", { type: "text/csv" }));
 });
 g0build();
+dInit();
 calcUnitEcon(false);
 $("#demo").addEventListener("click", e => {
   e.stopPropagation();

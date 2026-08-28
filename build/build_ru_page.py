@@ -399,6 +399,93 @@ t('["critical","NO REAL DEMAND DOORS","Every keyword is a fad spike or a looker 
 t('Searches-per-sale = search volume ÷ attributed purchases: ≤20 strong · 20–60 normal · 60–120 weak · >120 lookers. Trend ≥+200% = fad flag → verify the shape in Gate 1. Feed the P10/P90 suggestion into the workbook\'s Sheet 6 after an Xray sanity check.',
   'Поисков на продажу = поисковый объём ÷ атрибутированные покупки: ≤20 сильный · 20–60 нормальный · 60–120 слабый · >120 зеваки. Тренд ≥+200% = флаг хайпа → проверьте форму Этапом 1. Рекомендованные P10/P90 переносите в Лист 6 книги после сверки с Xray.')
 
+# ---------- dossier ----------
+t('<h2>Dossier — compare niches <span class="gchip">empty</span></h2>',
+  '<h2>Досье — сравнение ниш <span class="gchip">пусто</span></h2>')
+t('<p class="gsub">Workbook Sheet 5 as software. Save a finished funnel run under a niche name and compare up to 10 of them side by side. The score ranks research time — the go/no-go is still Gates 0–4, never this number.</p>',
+  '<p class="gsub">Лист 5 книги в виде программы. Сохраните пройденную воронку под именем ниши и сравнивайте до 10 штук рядом. Балл расставляет приоритет исследования — решение «идём / не идём» остаётся за Этапами 0–4, а не за этим числом.</p>')
+t('<b>Saved on this device only.</b> The dossier lives in this browser\'s local storage. Nothing is uploaded; clearing your browser data clears it.',
+  '<b>Сохраняется только на этом устройстве.</b> Досье лежит в локальном хранилище этого браузера. Ничего не загружается; очистка данных браузера очистит и досье.')
+t('Niche / keyword<input id="d_name" type="text" placeholder="e.g. schubladen organizer küche">',
+  'Ниша / ключ<input id="d_name" type="text" placeholder="напр. schubladen organizer küche">')
+t('First order + compliance cash need (€)<input id="d_cash" type="number" step="100" placeholder="workbook Sheets 6+8">',
+  'Деньги на первый заказ + комплаенс (€)<input id="d_cash" type="number" step="100" placeholder="книга, Листы 6+8">')
+t('Budget incl. reorder reserve (€)<input id="d_budget" type="number" step="100" value="6500">',
+  'Бюджет с резервом на дозаказ (€)<input id="d_budget" type="number" step="100" value="6500">')
+t('<button class="btn" id="d_save" type="button">Save this niche</button>',
+  '<button class="btn" id="d_save" type="button">Сохранить нишу</button>')
+t('<button class="btn" id="d_print" type="button">Print / save as PDF</button>',
+  '<button class="btn" id="d_print" type="button">Печать / сохранить в PDF</button>')
+t('Everything except the cash need is taken from the gates above as they stand right now. A niche saved before you ran a gate keeps that column blank, and a blank input leaves the score blank — same rule as Sheet 5.',
+  'Всё, кроме потребности в деньгах, берётся из этапов выше в их текущем состоянии. Ниша, сохранённая до прохождения этапа, оставляет эту строку пустой, а пустой ввод оставляет пустым балл — то же правило, что в Листе 5.')
+
+t('label:"Page-1 revenue, €/month",             src:"Gate 2"', 'label:"Выручка страницы 1, €/мес",             src:"Этап 2"')
+t('label:"Top ASIN share of page revenue",      src:"Gate 2"', 'label:"Доля топ-ASIN в выручке страницы",      src:"Этап 2"')
+t('label:"Page-1 listings above 500 reviews",   src:"Gate 2"', 'label:"Листингов страницы 1 с 500+ отзывами",   src:"Этап 2"')
+t('label:"Fresh entrants (<12 mo, >€3k/mo)",    src:"Gate 2"', 'label:"Новые входы (<12 мес, >€3k/мес)",    src:"Этап 2"')
+t('label:"Weak competitor ≤4.3★ to attack",     src:"Gate 2"', 'label:"Слабый конкурент ≤4.3★ для атаки",     src:"Этап 2"')
+t('label:"China + Hong Kong share of page",     src:"Gate 2"', 'label:"Доля Китая и Гонконга на странице",     src:"Этап 2"')
+t('label:"Seasonality amplitude",               src:"Gate 1"', 'label:"Амплитуда сезонности",               src:"Этап 1"')
+t('label:"Top-4 months’ share of the year",     src:"Gate 1"', 'label:"Доля топ-4 месяцев в году",     src:"Этап 1"')
+t('label:"Contribution margin, % of net",       src:"Gate 3"', 'label:"Маржинальный доход, % от нетто",       src:"Этап 3"')
+t('label:"First order + compliance cash, €",    src:"typed"',  'label:"Деньги на первый заказ + комплаенс, €",    src:"вручную"')
+t('fmt:v=>v===1?"yes":"no"', 'fmt:v=>v===1?"да":"нет"')
+t('const DVLABEL = { INVESTIGATE:"INVESTIGATE", PARK:"PARK", DROP:"DROP" };',
+  'const DVLABEL = { INVESTIGATE:"ИЗУЧАТЬ", PARK:"ОТЛОЖИТЬ", DROP:"ОТБРОСИТЬ" };')
+
+t('if (n.compliance === "NO")  return ["DISQUALIFIED: compliance", "red", true];',
+  'if (n.compliance === "NO")  return ["ДИСКВАЛИФИКАЦИЯ: комплаенс", "red", true];')
+t('if (n.v.amp >= 4)           return ["DISQUALIFIED: single-season", "red", true];',
+  'if (n.v.amp >= 4)           return ["ДИСКВАЛИФИКАЦИЯ: один сезон", "red", true];')
+t('if (n.compliance == null)   return ["OK — Gate 0 unanswered", "yellow", false];',
+  'if (n.compliance == null)   return ["OK — Этап 0 без ответов", "yellow", false];')
+t('  return ["OK", "green", false];', '  return ["OK", "green", false];')
+
+t('$("#dossier .gchip").textContent = ns.length ? ns.length + " of " + DMAX : "empty";',
+  '$("#dossier .gchip").textContent = ns.length ? ns.length + " из " + DMAX : "пусто";')
+t('$("#d_printhead").textContent = "EaseStore · Niche Funnel dossier · " + ns.length +\n      " niche" + (ns.length===1?"":"s") + " · budget €" + fmt0(budget) + " · printed " + new Date().toISOString().slice(0,10);',
+  '$("#d_printhead").textContent = "EaseStore · Досье воронки ниш · " + ns.length +\n      " ниш" + (ns.length===1?"а":"") + " · бюджет €" + fmt0(budget) + " · напечатано " + new Date().toISOString().slice(0,10);')
+t('out.innerHTML = \'<div class="card"><div class="meta" style="margin:0">No niches saved yet. Run the gates above, type a name, and press “Save this niche”.</div></div>\'; return; }',
+  'out.innerHTML = \'<div class="card"><div class="meta" style="margin:0">Пока не сохранено ни одной ниши. Пройдите этапы выше, введите имя и нажмите «Сохранить нишу».</div></div>\'; return; }')
+t('rows += `<tr class="sect"><td colspan="${ns.length+1}">Inputs</td></tr>`;',
+  'rows += `<tr class="sect"><td colspan="${ns.length+1}">Входные данные</td></tr>`;')
+t('rows += `<tr class="sect"><td colspan="${ns.length+1}">Scores (0–2 each, Sheet 5 bands)</td></tr>`;',
+  'rows += `<tr class="sect"><td colspan="${ns.length+1}">Баллы (0–2 каждый, диапазоны Листа 5)</td></tr>`;')
+t('rows += `<tr class="sect"><td colspan="${ns.length+1}">Context — not scored</td></tr>`;',
+  'rows += `<tr class="sect"><td colspan="${ns.length+1}">Контекст — не оценивается</td></tr>`;')
+t('rows += `<tr><td>Compliance Block A passed? <span class="src">Gate 0</span></td>` +',
+  'rows += `<tr><td>Блок A комплаенса пройден? <span class="src">Этап 0</span></td>` +')
+t('<span class="w">weight ${c.w.toFixed(2)}</span>', '<span class="w">вес ${c.w.toFixed(2)}</span>')
+t('rows += `<tr class="total"><td>Weighted score (0–100)</td>` +', 'rows += `<tr class="total"><td>Взвешенный балл (0–100)</td>` +')
+t('rows += `<tr><td>Hard gates</td>` +', 'rows += `<tr><td>Жёсткие ворота</td>` +')
+t('rows += `<tr class="total"><td>Verdict</td>` +', 'rows += `<tr class="total"><td>Вердикт</td>` +')
+t('ctxRow("Gate 1 keyword analysed",  n => n.ctx.keyword);', 'ctxRow("Ключ, разобранный Этапом 1",  n => n.ctx.keyword);')
+t('ctxRow("YoY direction",', 'ctxRow("Направление YoY",')
+t('ctxRow("Year consistency",', 'ctxRow("Согласованность лет",')
+t('ctxRow("Review wall, months",', 'ctxRow("Стена отзывов, месяцев",')
+t('ctxRow("Median page price",', 'ctxRow("Медианная цена страницы",')
+t('ctxRow("Median weight, kg",', 'ctxRow("Медианный вес, кг",')
+t('ctxRow("Breakeven ACOS",', 'ctxRow("Безубыточный ACOS",')
+t('ctxRow("Best launch keyword",', 'ctxRow("Лучший ключ для запуска",')
+t('ctxRow("Push cost to page 1",', 'ctxRow("Цена разгона до страницы 1",')
+t('ctxRow("Order size P10 / P90",', 'ctxRow("Размер заказа P10 / P90",')
+t('ctxRow("Gate colours 0–4",', 'ctxRow("Цвета этапов 0–4",')
+t('ctxRow("Saved",', 'ctxRow("Сохранено",')
+t('<thead><tr><th>Criterion</th>', '<thead><tr><th>Критерий</th>')
+t('title="Remove this niche"', 'title="Убрать эту нишу"')
+t('Bands, weights and thresholds are workbook Sheet 5 rows 21–34 unchanged: ≥70 investigate · 50–69 park · &lt;50 drop · any DISQUALIFIED drops regardless of score. The score is blank until all ten inputs exist, exactly as Sheet 5 D32 does it. Budget €${fmt0(budget)} is the cash-fit denominator (Sheet 5 C4).',
+  'Диапазоны, веса и пороги — строки 21–34 Листа 5 книги без изменений: ≥70 изучать · 50–69 отложить · &lt;50 отбросить · любая ДИСКВАЛИФИКАЦИЯ отбрасывает независимо от балла. Балл пуст, пока нет всех десяти входов — ровно как в D32 Листа 5. Бюджет €${fmt0(budget)} — знаменатель проверки на деньги (C4 Листа 5).')
+t('st.className = "status err"; st.textContent = "⚠ Give the niche a name first."; return; }',
+  'st.className = "status err"; st.textContent = "⚠ Сначала дайте нише имя."; return; }')
+t('st.textContent = "⚠ The dossier holds " + DMAX + " niches. Remove one with ✕ before saving another.";',
+  'st.textContent = "⚠ Досье вмещает " + DMAX + " ниш. Уберите одну через ✕, прежде чем сохранять следующую.";')
+t('st.className = "status err"; st.textContent = "⚠ Could not write to local storage — private browsing, or the quota is full."; return; }',
+  'st.className = "status err"; st.textContent = "⚠ Не удалось записать в локальное хранилище — приватный режим или переполнена квота."; return; }')
+t('const blanks = DCRIT.filter(c => rec.v[c.id] == null).map(c => c.src === "typed" ? "cash need" : c.src);',
+  'const blanks = DCRIT.filter(c => rec.v[c.id] == null).map(c => c.src === "вручную" ? "деньги" : c.src);')
+t('st.textContent = (at>=0 ? "Updated “" : "Saved “") + name + "”." +\n      (blanks.length ? " Blank: " + [...new Set(blanks)].join(", ") + " — the score stays blank until those exist." : "");',
+  'st.textContent = (at>=0 ? "Обновлено «" : "Сохранено «") + name + "»." +\n      (blanks.length ? " Пусто: " + [...new Set(blanks)].join(", ") + " — балл останется пустым, пока их нет." : "");')
+
 # ---------- apply ----------
 missing = []
 for old, new, n in P:
