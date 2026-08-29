@@ -1112,13 +1112,23 @@ function parseCerebro(rows){
   if (!kws.length) throw new Error("В экспорте не найдено строк с ключами.");
   return kws;
 }
+/* Cerebro's "Keyword Sales" tooltip reads: "Estimated number of weekly sales (in
+   number of units) attributed to each keyword". Search Volume is taken as MONTHLY,
+   which is Helium 10's usual basis and is stated on screen so it can be checked.
+   Reading the weekly figure as monthly made every keyword look 4.3x worse than it
+   is and shrank the order size by the same factor. Workbook Sheet 6 C40/C41 now
+   applies the same x52/12. */
+const WEEKS_PER_MONTH = 52/12;
+const kwSalesMonthly = k => (k.sales == null ? null : k.sales * WEEKS_PER_MONTH);
+
 function renderCerebro(){
   if (!g4data) return;
   const landed = parseFloat($("#k_landed").value)||0, disc = parseFloat($("#k_disc").value)||0;
   const spend = parseFloat($("#k_spend").value)||0, maxPush = parseFloat($("#k_max").value)||0;
   const rowsH = [];
   const enriched = g4data.map(k=>{
-    const sps = (k.sales>0 && k.sv>0) ? k.sv/k.sales : null;
+    const salesM = kwSalesMonthly(k);                 // weekly -> monthly, to match Search Volume
+    const sps = (salesM > 0 && k.sv > 0) ? k.sv/salesM : null;
     let intent, iStat;
     if (sps==null){ intent="нет данных о продажах"; iStat="yellow"; }
     else if (sps<=20){ intent="СИЛЬНЫЙ — покупатели, не зеваки"; iStat="green"; }
@@ -1127,11 +1137,12 @@ function renderCerebro(){
     else { intent="ЗЕВАКИ — поиски не конвертируются"; iStat="red"; }
     const fad = k.trend!=null && k.trend >= 200;
     const push = k.cpr!=null ? k.cpr*(landed+disc) + spend*8 : null;
-    const velRatio = (k.sales>0 && k.cpr) ? k.cpr/(k.sales*8/30) : null;
+    const velRatio = (k.sales>0 && k.cpr) ? k.cpr/(k.sales*8/7) : null;
     const status = fad ? "red" : iStat;
-    return {...k, sps, intent, fad, push, velRatio, status};
+    return {...k, salesM, sps, intent, fad, push, velRatio, status};
   });
-  const totalSales = enriched.reduce((a,k)=>a+(k.sales||0),0);
+  const totalSalesWk = enriched.reduce((a,k)=>a+(k.sales||0),0);
+  const totalSales = totalSalesWk * WEEKS_PER_MONTH;      // monthly, for P10/P90
   const candidates = enriched.filter(k=>k.status!=="red" && k.push!=null);
   const affordable = candidates.filter(k=>k.push<=maxPush);
   const affordableStrong = affordable.filter(k=>k.status==="green");
@@ -1149,15 +1160,15 @@ function renderCerebro(){
     <h3 class="cardtitle">Проверка ключей</h3>
     <div class="meta">${g4file} · ${enriched.length} ключей${noPush&&canJudge?" ("+noPush+" без CPR — не участвуют в проверке по деньгам)":""} · цена разгона при себестоимости €${landed.toFixed(2)} + €${disc.toFixed(2)} скидка + €${spend.toFixed(0)}/день рекламы × 8 дней</div>
     <div class="tiles">
-      ${tile("Продажи по ключам, всего", fmt0(totalSales)+"/мес", "ключи пересекаются — верхняя граница")}
+      ${tile("Продажи по ключам, всего", fmt0(totalSales)+"/мес", fmt0(totalSalesWk)+"/неделю в файле · ключи пересекаются, верхняя граница")}
       ${tile("Лучший ключ для запуска", best?best.kw:"—", best?("разгон ≈ €"+fmt0(best.push)):"жизнеспособного кандидата нет")}
-      ${tile("Рекомендуемый P10", fmt0(totalSales*0.04*12), "доля 4% × 12 мес, Keyword Sales считаются ЗА МЕСЯЦ")}
-      ${tile("Рекомендуемый P90", fmt0(totalSales*0.15*12), "доля 15% × 12 мес, Keyword Sales считаются ЗА МЕСЯЦ")}
+      ${tile("Рекомендуемый P10", fmt0(totalSales*0.04*12), "доля 4% × 12 мес от месячного темпа")}
+      ${tile("Рекомендуемый P90", fmt0(totalSales*0.15*12), "доля 15% × 12 мес от месячного темпа")}
     </div>
     <table class="checks">${enriched.map(k=>`
       <tr><td class="ic">${dot(k.status)}</td>
         <td><b>${k.kw}</b>${k.fad?' <span style="color:var(--critical);font-size:11px;font-weight:600">ХАЙП? +'+fmt0(k.trend)+'% тренд</span>':""}<br>
-        <span style="color:var(--ink-2)">SV ${fmt0(k.sv)} · продажи ${k.sales==null?"—":fmt0(k.sales)}/мес · ${k.sps==null?"":fmt0(k.sps)+" поисков на продажу — "}${k.intent}${
+        <span style="color:var(--ink-2)">SV ${fmt0(k.sv)}/мес · продажи ${k.salesM==null?"—":fmt0(k.salesM)+"/мес ("+fmt0(k.sales)+"/нед)"} · ${k.sps==null?"":fmt0(k.sps)+" поисков на продажу — "}${k.intent}${
           k.velRatio!=null && k.velRatio>3 ? " · ⚠ CPR требует "+k.velRatio.toFixed(1)+"× органической 8-дневной скорости ключа — дорого удерживать" : ""}${
           k.td!=null ? (k.td<=5 ? " · TD "+fmt0(k.td)+" — мало оптимизированных заголовков, есть лазейка" : k.td>=30 ? " · TD "+fmt0(k.td)+" — заголовки перенасыщены" : "") : ""}</span></td>
         <td class="val">${k.push==null?"—":"CPR "+fmt0(k.cpr)+" · разгон €"+fmt0(k.push)}</td></tr>`).join("")}
@@ -1168,7 +1179,7 @@ function renderCerebro(){
         ? ["warning","ПО ДЕНЬГАМ ПРОХОДИТ, НО НАМЕРЕНИЕ СЛАБОЕ","Самая дешёвая дверь — «"+best.kw+"» (разгон ≈ €"+fmt0(best.push)+", внутри бюджета), но её поиски в основном разглядывают витрину ("+fmt0(best.sps)+" на продажу). Ждите более низкий CVR и более долгий разгон, чем обещает цифра. Прежде чем коммититься, поищите дочерний ключ с более сильным намерением."]
         : ["warning","ТОЛЬКО ДОРОГИЕ ДВЕРИ","Жизнеспособные ключи есть, но каждый разгон дороже вашего лимита €"+fmt0(maxPush)+" — поднимайте лимит осознанно или ищите более дешёвый дочерний ключ (длиннее фраза, фильтр Cerebro: CPR ниже 40)."])
       : ["critical","ДВЕРЕЙ С РЕАЛЬНЫМ СПРОСОМ НЕТ","Каждый ключ — либо хайп-всплеск, либо ключ зевак: много поисков, мало покупок. Спрос в нише слабее, чем притворяется её поисковый объём. Перепроверьте Этапом 1, прежде чем тратить что-либо."])}
-    <div class="meta" style="margin-top:10px">Этот этап читает Keyword Sales как продажи ЗА МЕСЯЦ — так же, как Лист 6 книги. Новый инструмент Helium 10 Xray Keywords считает их ЗА НЕДЕЛЮ; такой файл отклоняется выше, потому что чтение недельных чисел как месячных сделало бы каждый ключ примерно в 4,3 раза лучше, чем он есть. Поисков на продажу = поисковый объём ÷ атрибутированные покупки: ≤20 сильный · 20–60 нормальный · 60–120 слабый · >120 зеваки. Тренд ≥+200% = флаг хайпа → проверьте форму Этапом 1. Рекомендованные P10/P90 переносите в Лист 6 книги после сверки с Xray.</div>
+    <div class="meta" style="margin-top:10px">Cerebro считает Keyword Sales ЗА НЕДЕЛЮ (наведите курсор на заголовок колонки — там так и написано), поэтому этап умножает их на 52/12, прежде чем сравнивать с Search Volume, который берётся ЗА МЕСЯЦ. Лист 6 книги, C40/C41, делает то же самое. До 29 августа 2026 оба читали недельное число как месячное: из-за этого каждый ключ выглядел примерно в 4,3 раза хуже, чем он есть, а рекомендуемый заказ был во столько же раз меньше. Экспорт Xray Keywords отклоняется выше: он тоже недельный и вообще без CPR. Поисков на продажу = поисковый объём ÷ атрибутированные покупки: ≤20 сильный · 20–60 нормальный · 60–120 слабый · >120 зеваки. Тренд ≥+200% = флаг хайпа → проверьте форму Этапом 1. Рекомендованные P10/P90 переносите в Лист 6 книги после сверки с Xray.</div>
   </div>`;
   funnel.g4 = { best: best ? best.kw : null, push: best ? best.push : null,
                 sps: best ? best.sps : null, totalSales,

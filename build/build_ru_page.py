@@ -369,16 +369,17 @@ t(' keywords${noPush&&canJudge?" ("+noPush+" without CPR, left out of the afford
   ' ключей${noPush&&canJudge?" ("+noPush+" без CPR — не участвуют в проверке по деньгам)":""} · цена разгона при себестоимости €')
 t(' discount + €', ' скидка + €')
 t('/day ads × 8 days', '/день рекламы × 8 дней')
-t('${tile("Keyword sales, total", fmt0(totalSales)+"/mo", "overlaps between keywords — upper bound")}',
-  '${tile("Продажи по ключам, всего", fmt0(totalSales)+"/мес", "ключи пересекаются — верхняя граница")}')
+t('${tile("Keyword sales, total", fmt0(totalSales)+"/mo", fmt0(totalSalesWk)+"/week in the file · keywords overlap, upper bound")}',
+  '${tile("Продажи по ключам, всего", fmt0(totalSales)+"/мес", fmt0(totalSalesWk)+"/неделю в файле · ключи пересекаются, верхняя граница")}')
 t('${tile("Best launch keyword", best?best.kw:"—", best?("push ≈ €"+fmt0(best.push)):"no viable candidate")}',
   '${tile("Лучший ключ для запуска", best?best.kw:"—", best?("разгон ≈ €"+fmt0(best.push)):"жизнеспособного кандидата нет")}')
-t('${tile("Suggested P10", fmt0(totalSales*0.04*12), "4% share × 12 months, Keyword Sales read as MONTHLY")}',
-  '${tile("Рекомендуемый P10", fmt0(totalSales*0.04*12), "доля 4% × 12 мес, Keyword Sales считаются ЗА МЕСЯЦ")}')
-t('${tile("Suggested P90", fmt0(totalSales*0.15*12), "15% share × 12 months, Keyword Sales read as MONTHLY")}',
-  '${tile("Рекомендуемый P90", fmt0(totalSales*0.15*12), "доля 15% × 12 мес, Keyword Sales считаются ЗА МЕСЯЦ")}')
+t('${tile("Suggested P10", fmt0(totalSales*0.04*12), "4% share × 12 months of the monthly rate")}',
+  '${tile("Рекомендуемый P10", fmt0(totalSales*0.04*12), "доля 4% × 12 мес от месячного темпа")}')
+t('${tile("Suggested P90", fmt0(totalSales*0.15*12), "15% share × 12 months of the monthly rate")}',
+  '${tile("Рекомендуемый P90", fmt0(totalSales*0.15*12), "доля 15% × 12 мес от месячного темпа")}')
 t(">FAD? +'+fmt0(k.trend)+'% trend</span>", ">ХАЙП? +'+fmt0(k.trend)+'% тренд</span>")
-t('SV ${fmt0(k.sv)} · sales ${k.sales==null?"—":fmt0(k.sales)}/mo · ', 'SV ${fmt0(k.sv)} · продажи ${k.sales==null?"—":fmt0(k.sales)}/мес · ')
+t('SV ${fmt0(k.sv)}/mo · sales ${k.salesM==null?"—":fmt0(k.salesM)+"/mo ("+fmt0(k.sales)+"/wk)"} · ',
+  'SV ${fmt0(k.sv)}/мес · продажи ${k.salesM==null?"—":fmt0(k.salesM)+"/мес ("+fmt0(k.sales)+"/нед)"} · ')
 t('+" searches per sale — "', '+" поисков на продажу — "')
 t('" · ⚠ CPR demands "+k.velRatio.toFixed(1)+"× the keyword\'s organic 8-day velocity — expensive to hold"',
   '" · ⚠ CPR требует "+k.velRatio.toFixed(1)+"× органической 8-дневной скорости ключа — дорого удерживать"')
@@ -579,8 +580,8 @@ t('["warning","CANNOT JUDGE — NO CPR IN THIS FILE","Not one keyword in this fi
   '["warning","НЕЧЕМ СУДИТЬ — В ФАЙЛЕ НЕТ CPR","Ни у одного ключа в файле нет CPR, поэтому цену разгона на страницу 1 посчитать не из чего. Это ничего не говорит о нише — это нехватка данных. Выгрузите таблицу ключей из Cerebro, там CPR есть."]')
 # NOTE: pairs apply in order, and the "Searches-per-sale = ..." sentence after this
 # one is translated by an EARLIER pair. So this pair must cover only the new prefix.
-t('This gate reads Keyword Sales as sales per MONTH, matching workbook Sheet 6. Helium 10\'s newer Xray Keywords tool counts them per WEEK — that file is refused above, because reading weekly numbers as monthly would make every keyword look about 4.3× better than it is. ',
-  'Этот этап читает Keyword Sales как продажи ЗА МЕСЯЦ — так же, как Лист 6 книги. Новый инструмент Helium 10 Xray Keywords считает их ЗА НЕДЕЛЮ; такой файл отклоняется выше, потому что чтение недельных чисел как месячных сделало бы каждый ключ примерно в 4,3 раза лучше, чем он есть. ')
+t('Cerebro counts Keyword Sales per WEEK (hover the column header — it says so), so this gate multiplies them by 52/12 before comparing them with Search Volume, which is taken as MONTHLY. Workbook Sheet 6 C40/C41 does the same. Until 29 Aug 2026 both read the weekly figure as monthly, which made every keyword look about 4.3× worse than it is and shrank the suggested order by the same factor. The Xray Keywords export is refused above: it is also weekly and has no CPR at all. ',
+  'Cerebro считает Keyword Sales ЗА НЕДЕЛЮ (наведите курсор на заголовок колонки — там так и написано), поэтому этап умножает их на 52/12, прежде чем сравнивать с Search Volume, который берётся ЗА МЕСЯЦ. Лист 6 книги, C40/C41, делает то же самое. До 29 августа 2026 оба читали недельное число как месячное: из-за этого каждый ключ выглядел примерно в 4,3 раза хуже, чем он есть, а рекомендуемый заказ был во столько же раз меньше. Экспорт Xray Keywords отклоняется выше: он тоже недельный и вообще без CPR. ')
 
 # ---------- apply ----------
 missing = []

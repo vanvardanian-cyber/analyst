@@ -100,13 +100,27 @@ Two deliverables live here:
   of sales against a 386-unit order, which overstates cash-in. The page stops at the
   order and names the stock-out month. The reorder is still not modelled either way.
 
-- Gate 4 input rule (v4.1): Keyword Sales are read as PER MONTH, matching Sheet 6 B36.
-  Helium 10's newer **Xray Keywords** tool counts them PER WEEK and has no CPR column,
-  so that export is refused by name. Reading it as monthly would flatter every keyword
-  by ~4.3× on searches-per-sale and shrink Gate 4's P10/P90 (and therefore Gate 5's
-  order size) by the same factor. STILL OPEN: nobody has confirmed whether CEREBRO's
-  Keyword Sales is monthly. If Cerebro's tooltip also says weekly, then Gate 4 AND
-  workbook Sheet 6 B36/B40/B41 are both wrong and the fix is in the workbook first.
+- **Keyword Sales are WEEKLY** (settled 29 Aug 2026 from Cerebro's own column tooltip:
+  "Estimated number of weekly sales (in number of units) attributed to each keyword").
+  Both Gate 4 and workbook Sheet 6 used to read them as monthly. That made every keyword
+  look ~4.3× worse on searches-per-sale — on a real auflaufform export it labelled three
+  keywords "WEAK — window-shopping" when all five were STRONG — and it shrank Gate 4's
+  P10/P90, and therefore Gate 5's order size, by the same factor. Now: Gate 4 multiplies
+  by 52/12 before comparing with Search Volume, Sheet 6 C40/C41 do the same, and Sheet 6
+  B36 is relabelled "per WEEK" with its default changed 190 → 44. The 8-day velocity
+  ratio uses the weekly figure directly (×8/7), not a round trip through months.
+  Xray Keywords is refused outright: also weekly, and no CPR at all.
+  ASSUMPTION NOT YET CONFIRMED: Search Volume is taken as MONTHLY (Helium 10's usual
+  basis). It is stated on screen. If that tooltip ever says otherwise, searches-per-sale
+  needs no conversion at all — but P10/P90 and the velocity ratio would still be wrong,
+  so they are correct either way.
+- The searches-per-sale bands (20/60/120) have NEVER been checked against correctly
+  scaled data — they were set while the input was 4.3× off. Van's call: re-derive them
+  from real exports. Design agreed: breadth, not depth — many different PARENT keywords
+  across niches, few children each, because children share a parent's traffic and are
+  not independent samples. Percentiles give "typical vs unusual"; "good vs bad" needs
+  launch outcomes, which do not exist yet. Until then treat an all-STRONG result with
+  suspicion.
 - No gate may state a verdict it could not compute. Gate 4 used to print a confident
   red ("NO REAL DEMAND DOORS") when every push cost was null — i.e. when the file simply
   had no CPR. Missing data now reads "CANNOT JUDGE", and a file with only some CPRs is

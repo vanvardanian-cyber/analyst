@@ -340,6 +340,24 @@ def digits(xs):
     return [re.sub(r"[^\d.]", "", x.replace("\u00a0", "").replace(",", "")) for x in xs]
 same("EN/RU Gate 5 numbers identical", digits(en_g5), digits(ru_g5))
 
+# ---- The weekly -> monthly conversion, pinned with literals worked out by hand
+#      from the fixture, not taken from the mirror (the mirror moved with the page).
+#      Fixture weekly sales: 32 + 105 + 190 + 1140 + 661 = 2128/week.
+#      2128 * 52/12 = 9221/month. P10 = 9221*0.04*12, P90 = 9221*0.15*12.
+eq("G4 weekly sales converted to monthly", page["en"]["gate4"]["tiles"].get("Keyword sales, total"), 9221, 1)
+eq("G4 P10 off the monthly rate",          page["en"]["gate4"]["tiles"].get("Suggested P10"), 4426, 1)
+eq("G4 P90 off the monthly rate",          page["en"]["gate4"]["tiles"].get("Suggested P90"), 16598, 1)
+g4rows = " ".join((r.get("label") or "") + " " + (r.get("note") or "")
+                  for r in page["en"]["gate4"].get("checks", []))
+for wk, mo in [("1,140/wk", "4,940/mo"), ("661/wk", "2,864/mo"), ("32/wk", "139/mo")]:
+    ok = wk in g4rows and mo in g4rows
+    checks.append((ok, f"G4 row shows {wk} as {mo}", wk in g4rows and mo in g4rows, True))
+    if not ok:
+        fails.append(f"G4 row does not show {wk} converted to {mo}")
+# a keyword that used to read WEAK on the same data must now read STRONG
+same("G4 nackenkissen is STRONG once converted",
+     "nackenkissen" in g4rows and "14 searches per sale — STRONG" in g4rows, True)
+
 # ---- Gate 4 must never report a verdict it could not compute.
 #      Before this, an Xray Keywords export rendered a confident red
 #      ("NO REAL DEMAND DOORS") purely because every push cost was null.

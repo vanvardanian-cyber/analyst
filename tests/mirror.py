@@ -312,11 +312,15 @@ def gate4(landed=12.93, disc=3.0, spend=24.0, max_push=1000.0):
     ix = {"kw": h.index("keyword phrase"), "sales": h.index("keyword sales"),
           "sv": h.index("search volume"), "trend": h.index("search volume trend"),
           "cpr": h.index("cpr"), "td": h.index("title density")}
-    out, total_sales = [], 0.0
+    # Cerebro's Keyword Sales are WEEKLY (its own column tooltip); Search Volume is
+    # monthly. Comparing them without converting made every keyword look 4.3x worse.
+    weeks_per_month = 52 / 12
+    out, total_sales_wk = [], 0.0
     for r in rows[1:]:
-        sales = float(r[ix["sales"]]); sv = float(r[ix["sv"]])
+        sales_wk = float(r[ix["sales"]]); sv = float(r[ix["sv"]])
         trend = float(r[ix["trend"]]); cpr = float(r[ix["cpr"]])
-        total_sales += sales
+        total_sales_wk += sales_wk
+        sales = sales_wk * weeks_per_month
         sps = sv / sales if sales > 0 and sv > 0 else None
         if sps is None:      status = "yellow"
         elif sps <= 20:      status = "green"
@@ -335,7 +339,8 @@ def gate4(landed=12.93, disc=3.0, spend=24.0, max_push=1000.0):
     pool = strong or affordable or candidates
     best = sorted(pool, key=lambda k: k["push"])[0] if pool else None
     overall = "green" if strong else ("yellow" if candidates else "red")
-    return {"keywords": out, "totalSales": total_sales,
+    total_sales = total_sales_wk * weeks_per_month
+    return {"keywords": out, "totalSales": total_sales, "totalSalesWeekly": total_sales_wk,
             "best": best["kw"] if best else None,
             "bestPush": best["push"] if best else None,
             "p10": total_sales * 0.04 * 12, "p90": total_sales * 0.15 * 12,

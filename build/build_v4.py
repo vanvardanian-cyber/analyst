@@ -6,7 +6,9 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.comments import Comment
 from openpyxl.utils import get_column_letter
 
-OUT = "/home/claude/amazon-de-seller-workbook-v4-EN.xlsx"
+import os
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUT = os.path.join(ROOT, "workbook", "amazon-de-seller-workbook-v4-EN.xlsx")
 wb = Workbook()
 
 # ---------- styles ----------
@@ -447,14 +449,14 @@ frm(ws, "B31", '=IF(OR(C22="",C23=""),"",IF(C23<C22*0.8,"⚠ Budget caps you wel
 note(ws, "B33", "For a year-round product this sizes the seasonal chunk; you can reorder, so lean toward the lower end and reorder fast.")
 
 put(ws, "B35", "P10/P90 helper — from Cerebro keyword sales (v4)", F_SECTION, fill=FILL_HDR); put(ws, "C35", "", F_SECTION, fill=FILL_HDR)
-put(ws, "B36", "Keyword sales per month (Cerebro, niche keywords summed)", F_BASE); inp(ws, "C36", 190, fmt=NUM)
-note(ws, "E36", "Cerebro column 'Keyword Sales' = purchases attributed to the keyword(s). Sum the parent + main children, don't double-count overlapping terms.")
+put(ws, "B36", "Keyword sales per WEEK (Cerebro, niche keywords summed)", F_BASE); inp(ws, "C36", 44, fmt=NUM)
+note(ws, "E36", "Cerebro column 'Keyword Sales' = purchases attributed to the keyword(s), counted PER WEEK (hover the column header in Cerebro - it says weekly). Rows 40/41 convert to months with x52/12. Earlier versions of this sheet read this figure as monthly, which made every suggested order about 4.3x too small. Sum the parent + main children, don't double-count overlapping terms.")
 put(ws, "B37", "Months you are buying stock for", F_BASE); inp(ws, "C37", 12, fmt="0")
 put(ws, "B38", "Pessimistic share you capture", F_BASE); inp(ws, "C38", 0.04, fmt=PCT)
 put(ws, "B39", "Optimistic share you capture", F_BASE); inp(ws, "C39", 0.15, fmt=PCT)
 comment(ws, "C38", "Position share of clicks: positions 1–3 take ~40–60%, 4–8 take ~15–25%, bottom of page 1 under 5%. A launch that reaches mid-page realistically captures 4–15% of keyword sales — that's the default range here. Adjust only with evidence (weak competition, strong differentiation).")
-put(ws, "B40", "Suggested P10 (→ copy into C6)", F_BASE); frm(ws, "C40", '=IFERROR(ROUND(C36*C38*C37,0),"")', fmt=NUM)
-put(ws, "B41", "Suggested P90 (→ copy into C7)", F_BASE); frm(ws, "C41", '=IFERROR(ROUND(C36*C39*C37,0),"")', fmt=NUM)
+put(ws, "B40", "Suggested P10 (→ copy into C6)", F_BASE); frm(ws, "C40", '=IFERROR(ROUND(C36*(52/12)*C38*C37,0),"")', fmt=NUM)
+put(ws, "B41", "Suggested P90 (→ copy into C7)", F_BASE); frm(ws, "C41", '=IFERROR(ROUND(C36*(52/12)*C39*C37,0),"")', fmt=NUM)
 note(ws, "B43", "These are suggestions, not inputs the model reads automatically — sanity-check them against Xray page-1 unit sales before copying into C6/C7 above.")
 
 # =====================================================================

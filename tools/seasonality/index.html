@@ -1112,13 +1112,23 @@ function parseCerebro(rows){
   if (!kws.length) throw new Error("No keyword rows found in the export.");
   return kws;
 }
+/* Cerebro's "Keyword Sales" tooltip reads: "Estimated number of weekly sales (in
+   number of units) attributed to each keyword". Search Volume is taken as MONTHLY,
+   which is Helium 10's usual basis and is stated on screen so it can be checked.
+   Reading the weekly figure as monthly made every keyword look 4.3x worse than it
+   is and shrank the order size by the same factor. Workbook Sheet 6 C40/C41 now
+   applies the same x52/12. */
+const WEEKS_PER_MONTH = 52/12;
+const kwSalesMonthly = k => (k.sales == null ? null : k.sales * WEEKS_PER_MONTH);
+
 function renderCerebro(){
   if (!g4data) return;
   const landed = parseFloat($("#k_landed").value)||0, disc = parseFloat($("#k_disc").value)||0;
   const spend = parseFloat($("#k_spend").value)||0, maxPush = parseFloat($("#k_max").value)||0;
   const rowsH = [];
   const enriched = g4data.map(k=>{
-    const sps = (k.sales>0 && k.sv>0) ? k.sv/k.sales : null;
+    const salesM = kwSalesMonthly(k);                 // weekly -> monthly, to match Search Volume
+    const sps = (salesM > 0 && k.sv > 0) ? k.sv/salesM : null;
     let intent, iStat;
     if (sps==null){ intent="no sales data"; iStat="yellow"; }
     else if (sps<=20){ intent="STRONG — buyers, not browsers"; iStat="green"; }
@@ -1127,11 +1137,12 @@ function renderCerebro(){
     else { intent="LOOKERS — searches don't convert"; iStat="red"; }
     const fad = k.trend!=null && k.trend >= 200;
     const push = k.cpr!=null ? k.cpr*(landed+disc) + spend*8 : null;
-    const velRatio = (k.sales>0 && k.cpr) ? k.cpr/(k.sales*8/30) : null;
+    const velRatio = (k.sales>0 && k.cpr) ? k.cpr/(k.sales*8/7) : null;
     const status = fad ? "red" : iStat;
-    return {...k, sps, intent, fad, push, velRatio, status};
+    return {...k, salesM, sps, intent, fad, push, velRatio, status};
   });
-  const totalSales = enriched.reduce((a,k)=>a+(k.sales||0),0);
+  const totalSalesWk = enriched.reduce((a,k)=>a+(k.sales||0),0);
+  const totalSales = totalSalesWk * WEEKS_PER_MONTH;      // monthly, for P10/P90
   const candidates = enriched.filter(k=>k.status!=="red" && k.push!=null);
   const affordable = candidates.filter(k=>k.push<=maxPush);
   const affordableStrong = affordable.filter(k=>k.status==="green");
@@ -1149,15 +1160,15 @@ function renderCerebro(){
     <h3 class="cardtitle">Keyword check</h3>
     <div class="meta">${g4file} · ${enriched.length} keywords${noPush&&canJudge?" ("+noPush+" without CPR, left out of the affordability check)":""} · push cost at landed €${landed.toFixed(2)} + €${disc.toFixed(2)} discount + €${spend.toFixed(0)}/day ads × 8 days</div>
     <div class="tiles">
-      ${tile("Keyword sales, total", fmt0(totalSales)+"/mo", "overlaps between keywords — upper bound")}
+      ${tile("Keyword sales, total", fmt0(totalSales)+"/mo", fmt0(totalSalesWk)+"/week in the file · keywords overlap, upper bound")}
       ${tile("Best launch keyword", best?best.kw:"—", best?("push ≈ €"+fmt0(best.push)):"no viable candidate")}
-      ${tile("Suggested P10", fmt0(totalSales*0.04*12), "4% share × 12 months, Keyword Sales read as MONTHLY")}
-      ${tile("Suggested P90", fmt0(totalSales*0.15*12), "15% share × 12 months, Keyword Sales read as MONTHLY")}
+      ${tile("Suggested P10", fmt0(totalSales*0.04*12), "4% share × 12 months of the monthly rate")}
+      ${tile("Suggested P90", fmt0(totalSales*0.15*12), "15% share × 12 months of the monthly rate")}
     </div>
     <table class="checks">${enriched.map(k=>`
       <tr><td class="ic">${dot(k.status)}</td>
         <td><b>${k.kw}</b>${k.fad?' <span style="color:var(--critical);font-size:11px;font-weight:600">FAD? +'+fmt0(k.trend)+'% trend</span>':""}<br>
-        <span style="color:var(--ink-2)">SV ${fmt0(k.sv)} · sales ${k.sales==null?"—":fmt0(k.sales)}/mo · ${k.sps==null?"":fmt0(k.sps)+" searches per sale — "}${k.intent}${
+        <span style="color:var(--ink-2)">SV ${fmt0(k.sv)}/mo · sales ${k.salesM==null?"—":fmt0(k.salesM)+"/mo ("+fmt0(k.sales)+"/wk)"} · ${k.sps==null?"":fmt0(k.sps)+" searches per sale — "}${k.intent}${
           k.velRatio!=null && k.velRatio>3 ? " · ⚠ CPR demands "+k.velRatio.toFixed(1)+"× the keyword's organic 8-day velocity — expensive to hold" : ""}${
           k.td!=null ? (k.td<=5 ? " · TD "+fmt0(k.td)+" — few optimized titles, an opening" : k.td>=30 ? " · TD "+fmt0(k.td)+" — title-saturated" : "") : ""}</span></td>
         <td class="val">${k.push==null?"—":"CPR "+fmt0(k.cpr)+" · push €"+fmt0(k.push)}</td></tr>`).join("")}
@@ -1168,7 +1179,7 @@ function renderCerebro(){
         ? ["warning","AFFORDABLE, BUT WEAK INTENT","Cheapest viable door is “"+best.kw+"” (push ≈ €"+fmt0(best.push)+", inside budget) — but its searches mostly window-shop ("+fmt0(best.sps)+" per sale). Expect a lower CVR and a longer grind than the push number implies. Look for a stronger-intent child keyword before committing."]
         : ["warning","EXPENSIVE DOORS ONLY","Viable keywords exist but every push exceeds your €"+fmt0(maxPush)+" cap — raise the cap knowingly, or find a cheaper child keyword (longer phrase, Cerebro filter: CPR below 40)."])
       : ["critical","NO REAL DEMAND DOORS","Every keyword is a fad spike or a looker keyword — high searches that don't convert to purchases. This niche's demand is weaker than its search volume pretends. Re-check with Gate 1 before spending anything."])}
-    <div class="meta" style="margin-top:10px">This gate reads Keyword Sales as sales per MONTH, matching workbook Sheet 6. Helium 10's newer Xray Keywords tool counts them per WEEK — that file is refused above, because reading weekly numbers as monthly would make every keyword look about 4.3× better than it is. Searches-per-sale = search volume ÷ attributed purchases: ≤20 strong · 20–60 normal · 60–120 weak · >120 lookers. Trend ≥+200% = fad flag → verify the shape in Gate 1. Feed the P10/P90 suggestion into the workbook's Sheet 6 after an Xray sanity check.</div>
+    <div class="meta" style="margin-top:10px">Cerebro counts Keyword Sales per WEEK (hover the column header — it says so), so this gate multiplies them by 52/12 before comparing them with Search Volume, which is taken as MONTHLY. Workbook Sheet 6 C40/C41 does the same. Until 29 Aug 2026 both read the weekly figure as monthly, which made every keyword look about 4.3× worse than it is and shrank the suggested order by the same factor. The Xray Keywords export is refused above: it is also weekly and has no CPR at all. Searches-per-sale = search volume ÷ attributed purchases: ≤20 strong · 20–60 normal · 60–120 weak · >120 lookers. Trend ≥+200% = fad flag → verify the shape in Gate 1. Feed the P10/P90 suggestion into the workbook's Sheet 6 after an Xray sanity check.</div>
   </div>`;
   funnel.g4 = { best: best ? best.kw : null, push: best ? best.push : null,
                 sps: best ? best.sps : null, totalSales,
