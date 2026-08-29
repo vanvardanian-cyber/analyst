@@ -32,11 +32,10 @@ Two deliverables live here:
    inconvenient.** Every new metric needs a "kill-story" — a real niche it would have
    killed or saved. Every threshold is documented in the page footer, none hidden.
 4. **EN is the master, RU is generated.** The build script's leftover-English scan is
-   a hand-written word list, so it only catches what someone thought to list — three
-   strings ("✓ Gate passed.", the two other gate hints) shipped in English for a while
-   and one tile ("Contribution margin") shipped untranslated. The suite now asserts a
-   wider list against the RU page's rendered text, and asserts EN/RU numeric parity for
-   Gate 5. When editing pairs, never slice the pairs file by blank line — pairs are not
+   a hand-written word list, so it only catches what someone thought to list. One tile
+   ("Contribution margin") was genuinely shipping untranslated on the live RU page; the
+   scan's list did not include it. The suite now asserts a wider list against the RU
+   page's RENDERED text, and asserts EN/RU numeric parity for Gate 5. When editing pairs, never slice the pairs file by blank line — pairs are not
    blank-separated and a naive slice silently deletes its neighbours. After ANY change to
    `tools/seasonality/index.html`, update the translation pairs in
    `build/build_ru_page.py` and run it (`python3 build/build_ru_page.py` — check the
