@@ -389,6 +389,72 @@ def dossier(values, compliance, budget=6500):
     return {"scores": scores, "score": score, "hard": hard, "verdict": verdict}
 
 
+def gate5(p10, p90, salvage, holding, moq, po_budget, cu, landed, payout,
+          start_cash, deposit, bal_month, arrive, vat_lag,
+          launch_ads, ads_per_unit, fixed, index=None, start_month=0):
+    """Workbook Sheet 6 (order size) + Sheet 8 (12-month cash), independently.
+
+    Sheet 6 is reproduced exactly - the test asserts against the workbook's own
+    cached values. Sheet 8 is reproduced with one DELIBERATE divergence: the
+    workbook's example books 800 units of sales against a 386-unit order, and
+    this never plans to sell more than the order buys.
+    """
+    N = statistics.NormalDist()
+    mu = (p10 + p90) / 2
+    sigma = (p90 - p10) / 2.5631                       # Sheet 6 C19
+    co = landed + holding - salvage                    # C20
+    cr = min(0.9999, max(0.0001, cu / (cu + co)))      # C21
+    q_star = round(N.inv_cdf(cr) * sigma + mu)         # C22
+    max_aff = int(po_budget / landed)                  # C23
+    q_rec = min(max(moq, q_star), max_aff)             # C24
+    z = (q_rec - mu) / sigma                           # C25
+    lost = round(sigma * (N.pdf(z) - z * (1 - N.cdf(z))))   # C26
+    leftover = round(q_rec - mu + lost)                # C27
+    contrib = round(cu * (mu - lost) - co * leftover)  # C28
+
+    po = q_rec * landed                                # Sheet 8 C8
+    vat = round(0.19 * po)                             # C12
+    n_sell = 13 - arrive
+    plan = [0] * 13
+    stockout = None
+    if n_sell > 0:
+        w = [max(0.05, index[(start_month + arrive + i) % 12]) if index and
+             index[(start_month + arrive + i) % 12] is not None else 1.0
+             for i in range(n_sell)]
+        sw = sum(w)
+        left = q_rec
+        for i in range(n_sell):
+            got = max(0, min(left, round(q_rec * w[i] / sw)))
+            plan[arrive + i] = got
+            left -= got
+            if left <= 0 and stockout is None and i < n_sell - 1:
+                stockout = arrive + i
+    rows, cum, lowest, lowest_m = [], start_cash, start_cash, 0
+    for m in range(13):
+        units = plan[m]
+        ads = 0 if m < arrive else (launch_ads if m - arrive < 2 else ads_per_unit * units)
+        out = ((deposit * po if m == 0 else 0) + ((1 - deposit) * po if m == bal_month else 0)
+               + (vat if m == arrive else 0) + ads + fixed)
+        inn = units * payout + (vat if m == arrive + vat_lag else 0)
+        cum += inn - out
+        if cum < lowest:
+            lowest, lowest_m = cum, m
+        rows.append({"m": m, "units": units, "out": round(out), "in": round(inn),
+                     "cum": round(cum)})
+    return {"mu": mu, "sigma": sigma, "co": co, "cr": cr, "qStar": q_star,
+            "maxAff": max_aff, "qRec": q_rec, "z": z, "lost": lost,
+            "leftover": leftover, "contrib": contrib, "po": round(po), "vat": vat,
+            "lowest": round(lowest), "lowestM": lowest_m, "need": round(start_cash - lowest),
+            "sold": sum(plan), "stockout": stockout, "rows": rows,
+            "moqWarn": moq > q_star * 1.2, "budWarn": max_aff < q_star * 0.8}
+
+
+# Sheet 6's own inputs, so the suite can assert against the workbook's cached values.
+G5_SHEET6 = dict(p10=600, p90=1400, salvage=5, holding=1, moq=300, po_budget=5000,
+                 cu=20.3395705882353, landed=12.9294, payout=33.7730882352941,
+                 start_cash=6500, deposit=0.30, bal_month=2, arrive=3, vat_lag=2,
+                 launch_ads=700, ads_per_unit=3, fixed=133)
+
 REAL = {"gate1": "real-gate1-chart.csv", "gate2": "real-gate2-xray.csv"}
 
 
@@ -411,7 +477,8 @@ if __name__ == "__main__":
         real["gate1"] = gate1(REAL["gate1"])
     if "gate2" in have:
         real["gate2"] = gate2(REAL["gate2"])
-    res = {"real": real,
+    res = {"gate5": gate5(**G5_SHEET6),
+           "real": real,
            "gate0": {k: gate0(v) for k, v in G0_SCENARIOS.items()},
            "gate1": g1, "gate1seasonal": g1s, "gate2": g2, "gate3": g3, "gate4": gate4(),
            "dossier": {"nicheA": {"values": a_vals, **dossier(a_vals, "YES")},

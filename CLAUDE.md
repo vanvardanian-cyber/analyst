@@ -31,7 +31,13 @@ Two deliverables live here:
 3. **Thresholds change only when the LOGIC is wrong, never because a result is
    inconvenient.** Every new metric needs a "kill-story" — a real niche it would have
    killed or saved. Every threshold is documented in the page footer, none hidden.
-4. **EN is the master, RU is generated.** After ANY change to
+4. **EN is the master, RU is generated.** The build script's leftover-English scan is
+   a hand-written word list, so it only catches what someone thought to list — three
+   strings ("✓ Gate passed.", the two other gate hints) shipped in English for a while
+   and one tile ("Contribution margin") shipped untranslated. The suite now asserts a
+   wider list against the RU page's rendered text, and asserts EN/RU numeric parity for
+   Gate 5. When editing pairs, never slice the pairs file by blank line — pairs are not
+   blank-separated and a naive slice silently deletes its neighbours. After ANY change to
    `tools/seasonality/index.html`, update the translation pairs in
    `build/build_ru_page.py` and run it (`python3 build/build_ru_page.py` — check the
    paths at the top; it fails loudly listing untranslated strings). Never hand-edit
@@ -83,6 +89,18 @@ Two deliverables live here:
   (4%/15% of summed keyword sales × months). Green requires a strong-intent affordable
   keyword, not merely an affordable one.
 
+- Gate 5: order size = Sheet 6 newsvendor unchanged (σ=(P90−P10)/2.5631, Co=landed+
+  storage−salvage, service level Cu/(Cu+Co), NORMINV optimum clamped to MOQ and budget),
+  cash = Sheet 8's 12-month line. Red = cumulative cash below zero (Sheet 8's only
+  verdict); yellow = Sheet 6's own two warnings (MOQ >1.2×optimum, budget <0.8×optimum).
+  No new band. JS has no NORMINV: Acklam inverse-normal (rel. err <1.15e-9) + Chebyshev
+  erfc, both pinned against the workbook's cached values in the suite.
+  TWO DELIBERATE DIVERGENCES FROM SHEET 8, both documented in the page footer:
+  (a) monthly units are phased on the Gate 1 seasonal index instead of hand-copied;
+  (b) the plan never sells more than the order buys — Sheet 8's example books 800 units
+  of sales against a 386-unit order, which overstates cash-in. The page stops at the
+  order and names the stock-out month. The reorder is still not modelled either way.
+
 ## Backlog (agreed priority order)
 1. ~~**Gate 0**~~ — done. See the gate logic section above.
 2. ~~**Dossier**~~ — done. Sheet 5 rows 21–34 unchanged (weights, bands, ≥70/50–69/<50,
@@ -90,13 +108,21 @@ Two deliverables live here:
    `easestore.dossier.v1`, 10 niches (Sheet 5 itself holds 8), one-A4-landscape print.
    Only the cash need is typed; everything else is captured from the gates. Gate 5
    will make that field automatic.
-3. **Gate 5** — order & cash: newsvendor (P10/P90 from Gate 4, margin from Gate 3)
-   + 12-month cumulative cash line, lowest-cash verdict (mirrors workbook Sheets 6+8).
-4. Gate 1 v0.3: detrend the seasonal index (growth currently leaks into year-block
+3. ~~**Gate 5** — order & cash~~ DONE. Auto-fills P10/P90 from Gate 4, Cu/landed/payout
+   from Gate 3, season from Gate 1, and fills the dossier's cash row with the cash
+   trough (start − lowest = true capital requirement, per Sheet 12 B32's note).
+4. **Sheet 12 as software** — staggered multi-product cash across saved dossier niches.
+   NOT a per-niche gate; it belongs on the dossier, which already holds up to 10.
+   Groundwork is in: dCapture now stores order, po, lowestCash, funded and payout per
+   niche, so this is an addition rather than a rebuild. Kill-story: on €6,500, two
+   launches one quarter apart bottom out at −€3,405 and two launched together at
+   −€6,173, while the same two a year apart stay funded at +€1,017. The funnel could
+   not say that; only the workbook could.
+5. Gate 1 v0.3: detrend the seasonal index (growth currently leaks into year-block
    indexes — the "katzenklo" case).
-5. Operate tools (post-launch, separate section): PPC waste finder from Search Term
+6. Operate tools (post-launch, separate section): PPC waste finder from Search Term
    Report paste, monthly P&L tracker, money recovery checks.
-6. README refresh + landing copy when the funnel stabilizes — it still describes v3,
+7. README refresh + landing copy when the funnel stabilizes — it still describes v3,
    11 sheets and Netlify/Cloudflare hosting.
 
 ## Known bugs, not yet fixed

@@ -183,6 +183,15 @@ async function runPage(browser, htmlPath, label) {
   await page.click("#d_out .del[data-i='0']");
   dossier.afterDelete = await page.evaluate(dossierTable);
   data.dossier = dossier;
+  // Gate 5 runs on defaults with no file, so both pages must show the same
+  // numbers under different labels.
+  Object.assign(data, await page.evaluate(() => ({
+    g5tiles: Object.fromEntries([...document.querySelectorAll("#g5tilesA .tile, #g5tilesB .tile")]
+      .map(t => [t.querySelector(".k").textContent.trim(), t.querySelector(".v").textContent.trim()])),
+    g5values: [...document.querySelectorAll("#g5tilesA .tile .v, #g5tilesB .tile .v")]
+      .map(v => v.textContent.trim()),
+    bodyText: document.body.innerText,
+  })));
   // ignore the CDN fetch failure that file:// causes for the (unused) xlsx lib
   data.consoleErrors = consoleErrors.filter(e => !/xlsx|cloudflare|ERR_/i.test(e));
   data.label = label;
@@ -246,6 +255,45 @@ async function runRealPage(browser) {
   return data;
 }
 
+// Gate 5 driven with workbook Sheet 6's OWN inputs, so the suite can assert the
+// page against the workbook's cached values rather than against itself.
+async function runGate5(browser) {
+  const page = await browser.newPage();
+  const errs = [];
+  page.on("pageerror", e => errs.push(String(e)));
+  await page.goto(BASE + "/tools/seasonality/", { waitUntil: "domcontentloaded" });
+  await page.evaluate(() => localStorage.clear());
+  await page.selectOption("#c_month", "0");        // pin the season phase
+  const set = async (sel, val) => {
+    await page.fill(sel, String(val));
+    await page.dispatchEvent(sel, "input");
+  };
+  for (const [sel, val] of [["#o_p10", 600], ["#o_p90", 1400], ["#o_salv", 5],
+                            ["#o_hold", 1], ["#o_moq", 300], ["#o_pobud", 5000],
+                            ["#c_start", 6500], ["#c_dep", 30], ["#c_bal", 2],
+                            ["#c_arr", 3], ["#c_vat", 2], ["#c_launch", 700],
+                            ["#c_adsu", 3], ["#c_fix", 133]]) await set(sel, val);
+  const data = await page.evaluate(() => {
+    const txt = el => (el ? el.textContent.trim() : null);
+    const tiles = sel => Object.fromEntries([...document.querySelectorAll(`${sel} .tile`)]
+      .map(t => [t.querySelector(".k").textContent.trim(), t.querySelector(".v").textContent.trim()]));
+    return {
+      A: tiles("#g5tilesA"), B: tiles("#g5tilesB"),
+      va: [...document.querySelectorAll("#g5va .verdict b")].map(b => b.textContent.trim()),
+      vb: [...document.querySelectorAll("#g5vb .verdict b")].map(b => b.textContent.trim()),
+      chip: txt(document.querySelector("#gate5 .gchip")),
+      cls: ["green", "yellow", "red"].find(c => document.querySelector("#gate5").classList.contains(c)) || null,
+      rows: [...document.querySelectorAll("#g5table tr")].slice(1)
+        .map(tr => [...tr.querySelectorAll("td")].map(td => td.textContent.trim())),
+      dossierCash: document.querySelector("#d_cash").value,
+      legend: txt(document.querySelector("#g5chart .legend")),
+    };
+  });
+  data.pageErrors = errs.filter(e => !/favicon|ERR_/i.test(e));
+  await page.close();
+  return data;
+}
+
 const exe = browserPath();
 if (!exe) { console.error("No Chromium/Chrome binary found. Install Chrome, or set one of:\n" + CANDIDATE_BROWSERS.join("\n")); process.exit(2); }
 const browser = await chromium.launch({ executablePath: exe, headless: true });
@@ -254,6 +302,7 @@ const results = {
   en: await runPage(browser, "/tools/seasonality/", "EN"),
   ru: await runPage(browser, "/tools/seasonality/ru/", "RU"),
   real: haveReal ? await runRealPage(browser) : null,
+  gate5: await runGate5(browser),
 };
 await browser.close();
 server.close();

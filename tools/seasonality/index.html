@@ -115,6 +115,11 @@
   .form input { width:100%; margin-top:3px; padding:7px 9px; font:14px inherit; color:var(--ink-1);
                 background:var(--page); border:1px solid var(--baseline); border-radius:8px; }
   .form input:focus { outline:none; border-color:var(--series-1); }
+  /* a workbook default standing in for a number only you can know */
+  .form input[data-assumed] { border-style:dashed; border-color:var(--warning); }
+  .assumed-key { font-size:12px; color:var(--ink-2); margin-top:10px; }
+  .assumed-key i { display:inline-block; width:22px; border-top:2px dashed var(--warning);
+                   vertical-align:middle; margin-right:6px; }
   /* dossier */
   .dscroll { overflow-x: auto; margin-top: 14px; }
   .dtable { border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
@@ -162,7 +167,7 @@
 <div class="wrap">
   <header>
     <h1>Niche Funnel <span style="font-size:12px;color:var(--ink-muted);font-weight:400">beta · easestore.de</span> <a href="ru/" style="font-size:12px;font-weight:400;color:var(--series-1);margin-left:8px">RU</a></h1>
-    <p class="tag">Five gates, in order: may you legally sell it at all → is demand real and rising → can you win the page → does a unit earn enough → which keyword opens the door. Gate 0 needs no files; the rest take the Helium&nbsp;10 exports. A yellow or red gate never blocks you — it tells you what you are accepting if you continue.</p>
+    <p class="tag">Six gates, in order: may you legally sell it at all → is demand real and rising → can you win the page → does a unit earn enough → which keyword opens the door → can you afford the order. Gates 0 and 5 need no files; the rest take the Helium&nbsp;10 exports. A yellow or red gate never blocks you — it tells you what you are accepting if you continue.</p>
     <p class="privacy"><b>Your files never leave your browser.</b> Everything is computed on your device; nothing is uploaded or stored.</p>
   </header>
 
@@ -172,6 +177,7 @@
     <div class="step" id="step2" data-goto="gate2"><span class="dot"></span><b>2</b>&nbsp;Competition (Xray)</div>
     <div class="step" id="step3" data-goto="gate3"><span class="dot"></span><b>3</b>&nbsp;Unit economics</div>
     <div class="step" id="step4" data-goto="gate4"><span class="dot"></span><b>4</b>&nbsp;Keywords &amp; launch cost</div>
+    <div class="step" id="step5" data-goto="gate5"><span class="dot"></span><b>5</b>&nbsp;Order size &amp; cash</div>
   </div>
 
   <!-- ============ GATE 0 ============ -->
@@ -276,6 +282,49 @@
     <div class="nexthint" id="hint4"></div>
   </section>
 
+  <!-- ============ GATE 5 ============ -->
+  <section class="gate" id="gate5">
+    <h2>Gate 5 — Order size &amp; cash <span class="gchip">not run</span></h2>
+    <p class="gsub">Workbook Sheets 6 + 8. How many units to buy when demand is unknowable, and whether the money survives the gap between paying the supplier and being paid by Amazon. No file — it runs on Gates 1, 3 and 4.</p>
+
+    <div class="card">
+      <h3 class="cardtitle">First order size</h3>
+      <div class="meta">Newsvendor model: balances the margin lost on a stockout against the cost of a unit left over.</div>
+      <div class="form">
+        <label>Pessimistic season sales, P10 (units)<input id="o_p10" type="number" step="10" value="600" data-auto="1"></label>
+        <label>Optimistic season sales, P90 (units)<input id="o_p90" type="number" step="10" value="1400" data-auto="1"></label>
+        <label>Recovered per leftover unit (€)<input id="o_salv" type="number" step="0.5" value="5" data-assumed="1"></label>
+        <label>Extra storage per leftover (€)<input id="o_hold" type="number" step="0.5" value="1" data-assumed="1"></label>
+        <label>Supplier MOQ (units)<input id="o_moq" type="number" step="50" value="300" data-assumed="1"></label>
+        <label>Budget for this PO, goods only (€)<input id="o_pobud" type="number" step="100" value="5000" data-assumed="1"></label>
+      </div>
+      <div class="tiles" id="g5tilesA" style="margin-top:16px"></div>
+      <div id="g5va"></div>
+      <div class="assumed-key"><i></i>Dashed = a workbook default, not your number. Replace them with supplier reality before you trust the order size. P10/P90 auto-fill from Gate 4 until you type your own.</div>
+    </div>
+
+    <div class="card">
+      <h3 class="cardtitle">12-month cash plan</h3>
+      <div class="meta">Money leaves in lumps and comes back as a drip. Only one number matters: the lowest point.</div>
+      <div class="form">
+        <label>Starting cash (€)<input id="c_start" type="number" step="100" value="6500"></label>
+        <label>Order placed in<select id="c_month"></select></label>
+        <label>Deposit at order (%)<input id="c_dep" type="number" step="5" value="30"></label>
+        <label>Balance paid in month #<input id="c_bal" type="number" step="1" value="2"></label>
+        <label>Goods arrive in month #<input id="c_arr" type="number" step="1" value="3"></label>
+        <label>Import VAT refunded after (months)<input id="c_vat" type="number" step="1" value="2"></label>
+        <label>Launch ads, first 2 selling months (€/mo)<input id="c_launch" type="number" step="50" value="700" data-assumed="1"></label>
+        <label>Ongoing ads per unit sold (€)<input id="c_adsu" type="number" step="0.5" value="3" data-assumed="1"></label>
+        <label>Fixed costs (€/month)<input id="c_fix" type="number" step="10" value="133" data-assumed="1"></label>
+      </div>
+      <div class="tiles" id="g5tilesB" style="margin-top:16px"></div>
+      <div id="g5vb"></div>
+      <div class="chartbox" id="g5chart"></div>
+      <details><summary>Month by month</summary><div id="g5table"></div></details>
+    </div>
+    <div class="nexthint" id="hint5"></div>
+  </section>
+
   <!-- ============ DOSSIER ============ -->
   <section class="gate" id="dossier">
     <h2>Dossier — compare niches <span class="gchip">empty</span></h2>
@@ -284,7 +333,7 @@
     <div class="card">
       <div class="form">
         <label>Niche / keyword<input id="d_name" type="text" placeholder="e.g. schubladen organizer küche"></label>
-        <label>First order + compliance cash need (€)<input id="d_cash" type="number" step="100" placeholder="workbook Sheets 6+8"></label>
+        <label>First order + compliance cash need (€)<input id="d_cash" type="number" step="100" placeholder="auto-fills from Gate 5" data-auto="1"></label>
         <label>Budget incl. reorder reserve (€)<input id="d_budget" type="number" step="100" value="6500"></label>
       </div>
       <div style="margin-top:12px">
@@ -306,8 +355,10 @@
       <li><b>Gate 2:</b> search the parent keyword on Amazon.de → run <b>Xray</b> on the results page → Export → CSV. Export the full page; the tool deduplicates and filters.</li>
       <li><b>Gate 3:</b> FBA fee from Xray or the Revenue Calculator; EXW from supplier quotes; freight from your forwarder’s rate × unit volume.</li>
       <li><b>Gate 4:</b> Cerebro → run the parent + children → export the keyword results table as CSV (not the chart — that file is Gate 1's).</li>
+      <li><b>Gate 5:</b> no file. P10/P90 arrive from Gate 4, margin and landed cost from Gate 3, the season from Gate 1. What you must supply yourself is the supplier's MOQ, your PO budget, and what a leftover unit is really worth.</li>
     </ol>
     <b>Gate 0 thresholds:</b> the nine rows are workbook Sheet 4 Block A verbatim, where any NO is an automatic reject. This page splits them: the seven product-property rows stay a red kill, while the two seller-duty rows (EU Responsible Person under GPSR, packaging EPR via LUCID + PPWR authorised representative) are shown yellow. Reason: those two are seller-level obligations that attach to every consumer product, so as a niche filter they would reject every niche equally — they carry no information about this niche. They are still shown as NO in the Block A tally, which is printed unchanged next to the verdict. The brand question is not in the workbook.<br>
+    <b>Gate 5 thresholds:</b> order size is workbook Sheet 6 unchanged — σ = (P90−P10)/2.5631, C<sub>o</sub> = landed + extra storage − recovery, service level C<sub>u</sub>/(C<sub>u</sub>+C<sub>o</sub>), optimum clamped to MOQ and budget. Red is Sheet 8's only verdict: the cumulative cash line goes below zero. Yellow is Sheet 6's own two warnings — MOQ more than 20% above the optimum, or budget buying under 80% of it. No band here is new. Two things the page does that the workbook asks you to do by hand: it phases the monthly units on the Gate 1 seasonal index instead of a typed shape, and it refuses to plan more sales than the one order buys — where the workbook's example books 800 units of sales against a 386-unit order, this page stops at the order and tells you the stock-out month. The reorder is still not modelled (Sheet 8 note), so a stock-out warning means real cash-out is higher than the line shows. Excel's NORMINV/NORMDIST have no JavaScript equivalent: the inverse normal is Acklam's approximation (relative error &lt; 1.15e-9), the CDF a Chebyshev erfc.<br>
     <b>Method &amp; thresholds:</b> classical multiplicative decomposition, seasonal strength and year consistency after Hyndman &amp; Athanasopoulos (otexts.com/fpp3); selection gates follow the EaseStore workbook (page revenue, review moat, Amazon presence, CN/HK share, fresh entrants); price corridor and margin floor after common practitioner benchmarks (Freedom Ticket) — tightened for German VAT reality. Review-wall months assume 300 units/month at a 1.5% review rate. All thresholds documented, none hidden. Educational tool, not financial advice. © EaseStore 2026
   </footer>
 </div>
@@ -330,8 +381,8 @@ function pearson(a,b){
 
 /* ---------- gate status machinery ---------- */
 const RANK = { green:0, yellow:1, red:2 };
-const gateState = { 0:null, 1:null, 2:null, 3:null, 4:null };
-const funnel = { g0:null, g1:null, g2:null, g3:null, g4:null };   // what the dossier reads
+const gateState = { 0:null, 1:null, 2:null, 3:null, 4:null, 5:null };
+const funnel = { g0:null, g1:null, g2:null, g3:null, g4:null, g5:null };   // what the dossier reads
 function setGate(n, status){                        // status: "green"|"yellow"|"red"
   gateState[n] = status;
   const g = $("#gate"+n), s = $("#step"+n);
@@ -339,7 +390,7 @@ function setGate(n, status){                        // status: "green"|"yellow"|
   g.classList.add(status); s.classList.add(status);
   g.querySelector(".gchip").textContent = { green:"PASS", yellow:"CAUTION", red:"CHANGE NICHE?" }[status];
   const hint = $("#hint"+n);
-  const nxt = n<4 ? ` Next: Gate ${n+1}.` : " Funnel done — continue in the workbook (Sheets 4–8: full checklist, order size, cash plan).";
+  const nxt = n<5 ? ` Next: Gate ${n+1}.` : " Funnel done — save it to the dossier below, then take the order to the workbook (Sheet 7 PPC planner, Sheet 12 multi-year plan).";
   if (status==="green") hint.textContent = "✓ Gate passed." + nxt;
   else if (status==="yellow") hint.textContent = "▲ You can continue, but the warnings above are the risks you are accepting." + nxt;
   else hint.textContent = "✖ This niche failed hard checks. You can still continue to learn the numbers — but for a first product, changing the niche is the recommendation." + nxt;
@@ -754,8 +805,9 @@ function render(results){
   funnel.g1 = { keyword: p1.name, amp: p1.amp, top4: p1.top4, yoy: p1.yoy,
                 consistency: p1.consistency, strength: p1.strength,
                 ramp: p1.ramp==null ? null : MONTHS[p1.ramp], months: p1.months.length,
-                series: results.length };
+                index: p1.index, series: results.length };
   setGate(1, ["green","yellow","red"][worst]);
+  calcGate5();                       // the season phases the cash line
 }
 
 /* ================================================================
@@ -1017,6 +1069,7 @@ function calcUnitEcon(touched){
   $("#g3v").innerHTML = verdictHTML(v3);
   funnel.g3 = { price, net, payout, landed, cm, margin, beAcos, maxExw };
   if (touched) setGate(3, v3[0]==="good" ? "green" : v3[0]==="warning" ? "yellow" : "red");
+  calcGate5();                       // Cu, landed and payout all feed Gate 5
 }
 
 /* ================================================================
@@ -1110,6 +1163,7 @@ function renderCerebro(){
                 sps: best ? best.sps : null, totalSales,
                 p10: totalSales*0.04*12, p90: totalSales*0.15*12, keywords: enriched.length };
   setGate(4, overall);
+  calcGate5();                       // P10/P90 feed the order size
 }
 async function handleCerebro(file){
   const st = $("#status4"); st.className="status"; st.textContent = "Reading " + file.name + " …";
@@ -1119,6 +1173,212 @@ async function handleCerebro(file){
     st.textContent = "";
     renderCerebro();
   } catch (e){ st.className = "status err"; st.textContent = "⚠ " + e.message; }
+}
+
+/* ================================================================
+   GATE 5 — order size (Sheet 6) and 12-month cash (Sheet 8)
+   Excel has NORMINV/NORMDIST/NORMSDIST; JavaScript has none of them.
+   erfc: Numerical Recipes Chebyshev form.  normPPF: Acklam's rational
+   approximation, relative error < 1.15e-9 — no Halley refinement, because
+   refining against a less accurate CDF would make the answer worse.
+   ================================================================ */
+const ERFC_COF = [-1.3026537197817094,6.4196979235649026e-1,1.9476473204185836e-2,
+  -9.561514786808631e-3,-9.46595344482036e-4,3.66839497852761e-4,4.2523324806907e-5,
+  -2.0278578112534e-5,-1.624290004647e-6,1.303655835580e-6,1.5626441722e-8,-8.5238095915e-8,
+  6.529054439e-9,5.059343495e-9,-9.91364156e-10,-2.27365122e-10,9.6467911e-11,2.394038e-12,
+  -6.886027e-12,8.94487e-13,3.13092e-13,-1.12708e-13,3.81e-16,7.106e-15];
+function erfc(x){
+  const z = Math.abs(x), t = 2/(2+z), ty = 4*t - 2;
+  let d = 0, dd = 0;
+  for (let j=ERFC_COF.length-1; j>0; j--){ const tmp = d; d = ty*d - dd + ERFC_COF[j]; dd = tmp; }
+  const ans = t*Math.exp(-z*z + 0.5*(ERFC_COF[0] + ty*d) - dd);
+  return x >= 0 ? ans : 2 - ans;
+}
+function normCDF(z){ return 0.5*erfc(-z/Math.SQRT2); }                 // NORMSDIST
+function normPDF(z){ return Math.exp(-0.5*z*z)/Math.sqrt(2*Math.PI); } // NORMDIST(...,FALSE)
+function normPPF(p){                                                    // NORMSINV
+  if (!(p > 0 && p < 1)) return NaN;
+  const a = [-3.969683028665376e+01, 2.209460984245205e+02,-2.759285104469687e+02,
+              1.383577518672690e+02,-3.066479806614716e+01, 2.506628277459239e+00];
+  const b = [-5.447609879822406e+01, 1.615858368580409e+02,-1.556989798598866e+02,
+              6.680131188771972e+01,-1.328068155288572e+01];
+  const c = [-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,
+             -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00];
+  const d = [ 7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e+00,
+              3.754408661907416e+00];
+  const pl = 0.02425;
+  if (p < pl){ const q = Math.sqrt(-2*Math.log(p));
+    return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
+           ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1); }
+  if (p <= 1-pl){ const q = p-0.5, r = q*q;
+    return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q /
+           (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1); }
+  const q = Math.sqrt(-2*Math.log(1-p));
+  return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
+          ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+}
+
+let g5touched = false;
+const G5_Z80 = 2.5631;          // Sheet 6 C19: the P10..P90 span in standard deviations
+
+function orderSize(){                                   // Sheet 6 rows 18-31
+  const v = id => parseFloat($(id).value);
+  const g3 = funnel.g3;
+  if (!g3) return null;
+  const p10 = v("#o_p10"), p90 = v("#o_p90");
+  const salv = v("#o_salv")||0, hold = v("#o_hold")||0;
+  const moq = v("#o_moq")||0, poBud = v("#o_pobud")||0;
+  if (!isFinite(p10) || !isFinite(p90) || p90 <= p10) return { err:"P90 must be above P10 — they are the ends of a range, not a guess and a hope." };
+  if (!(g3.landed > 0)) return { err:"Gate 3 has no landed cost yet." };
+  const mu = (p10+p90)/2, sigma = (p90-p10)/G5_Z80;
+  const cu = g3.cm;                                     // margin lost on a stockout
+  const co = g3.landed + hold - salv;                   // cost of one left over
+  if (!(cu > 0)) return { err:"Contribution margin is not positive in Gate 3 — there is no order size that makes this work." };
+  const crRaw = cu/(cu+co);
+  const cr = Math.min(0.9999, Math.max(0.0001, crRaw));
+  const qStar = Math.round(normPPF(cr)*sigma + mu);
+  const maxAff = Math.floor(poBud/g3.landed);
+  const qRec = Math.min(Math.max(moq, qStar), maxAff);
+  const z = (qRec-mu)/sigma;
+  const lost = Math.round(sigma*(normPDF(z) - z*(1-normCDF(z))));
+  const leftover = Math.round(qRec - mu + lost);
+  const contrib = Math.round(cu*(mu-lost) - co*leftover);
+  return { p10, p90, mu, sigma, cu, co, cr, crRaw, qStar, maxAff, qRec, z, lost, leftover, contrib,
+           moqWarn: moq > qStar*1.2, budWarn: maxAff < qStar*0.8, salv, hold, moq, poBud };
+}
+
+function cashPlan(o){                                   // Sheet 8
+  const v = id => parseFloat($(id).value);
+  const g3 = funnel.g3;
+  const start = v("#c_start")||0, dep = (v("#c_dep")||0)/100;
+  const balM = Math.max(0, Math.round(v("#c_bal")||0));
+  const arr  = Math.max(0, Math.round(v("#c_arr")||0));
+  const lag  = Math.max(0, Math.round(v("#c_vat")||0));
+  const launchAds = v("#c_launch")||0, adsU = v("#c_adsu")||0, fixed = v("#c_fix")||0;
+  const startMonth = parseInt($("#c_month").value, 10) || 0;
+  const po = o.qRec*g3.landed;
+  const vat = Math.round(0.19*po);
+  // Sheet 8 tells you to copy the seasonal shape from Sheet 1 by hand.
+  // Gate 1 already computed it, so phase the units on it — and never plan to
+  // sell more than the one order buys. The reorder is not modelled (Sheet 8 B35).
+  const idx = funnel.g1 && funnel.g1.index ? funnel.g1.index : null;
+  const nSell = 13-arr;
+  const plan = new Array(13).fill(0);
+  let stockout = null;
+  if (nSell > 0){
+    const w = [];
+    for (let i=0;i<nSell;i++){
+      const cal = idx ? idx[(startMonth+arr+i)%12] : null;
+      w.push(cal==null ? 1 : Math.max(0.05, cal));
+    }
+    const sw = w.reduce((a,b)=>a+b,0);
+    let left = o.qRec;
+    for (let i=0;i<nSell;i++){
+      const want = Math.round(o.qRec*w[i]/sw);
+      const got = Math.max(0, Math.min(left, want));
+      plan[arr+i] = got; left -= got;
+      if (left <= 0 && stockout == null && i < nSell-1) stockout = arr+i;
+    }
+  }
+  const rows = [];
+  let cum = start, lowest = start, lowestM = 0;
+  for (let m=0; m<=12; m++){
+    const units = plan[m];
+    const ads = m < arr ? 0 : (m-arr < 2 ? launchAds : adsU*units);
+    const out = (m===0 ? dep*po : 0) + (m===balM ? (1-dep)*po : 0) + (m===arr ? vat : 0) + ads + fixed;
+    const inn = units*g3.payout + (m === arr+lag ? vat : 0);
+    const net = inn-out;
+    cum += net;
+    if (cum < lowest){ lowest = cum; lowestM = m; }
+    rows.push({ m, units, out: Math.round(out), inn: Math.round(inn), net: Math.round(net), cum: Math.round(cum) });
+  }
+  return { rows, lowest: Math.round(lowest), lowestM, po: Math.round(po), vat, start,
+           sold: plan.reduce((a,b)=>a+b,0), stockout, startMonth, arr,
+           need: Math.round(start-lowest), phased: !!idx };
+}
+
+function cashSVG(c){
+  const W=760, H=170, padL=44, padB=22, padT=14;
+  const iw=W-padL-8, ih=H-padT-padB;
+  const vals = c.rows.map(r=>r.cum);
+  const hi = Math.max(0, ...vals), lo = Math.min(0, ...vals);
+  const span = (hi-lo) || 1;
+  const y = v => padT + ih*(1 - (v-lo)/span);
+  const x = m => padL + iw*(m/12);
+  const pts = c.rows.map(r=>x(r.m).toFixed(1)+","+y(r.cum).toFixed(1)).join(" ");
+  const zero = y(0);
+  const dots = c.rows.map(r=>`<circle cx="${x(r.m).toFixed(1)}" cy="${y(r.cum).toFixed(1)}" r="${r.m===c.lowestM?3.5:2}"
+      fill="${r.cum<0?'var(--critical)':'var(--series-1)'}"/>`).join("");
+  return `<h3>Cumulative cash, months 0–12</h3>
+  <div class="legend">Lowest point €${fmt0(c.lowest)} in month ${c.lowestM}${c.phased?" · units phased on the Gate 1 season":" · units spread evenly (run Gate 1 to phase them on the season)"}</div>
+  <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative cash by month">
+    <line x1="${padL}" y1="${zero}" x2="${W-8}" y2="${zero}" stroke="var(--baseline)" stroke-width="1" stroke-dasharray="4 3"/>
+    <text x="${padL-6}" y="${zero+4}" text-anchor="end">€0</text>
+    <polyline points="${pts}" fill="none" stroke="var(--series-1)" stroke-width="2" stroke-linejoin="round"/>
+    ${dots}
+    ${c.rows.filter(r=>r.m%2===0).map(r=>`<text x="${x(r.m).toFixed(1)}" y="${H-6}" text-anchor="middle">${r.m}</text>`).join("")}
+  </svg>`;
+}
+
+function calcGate5(){
+  if (!$("#gate5")) return;
+  const g3 = funnel.g3;
+  // P10/P90 follow Gate 4 until Van types his own, exactly like Gate 4's landed cost
+  if (funnel.g4){
+    const a = $("#o_p10"), b = $("#o_p90");
+    if (a.dataset.auto && isFinite(funnel.g4.p10)) a.value = Math.round(funnel.g4.p10);
+    if (b.dataset.auto && isFinite(funnel.g4.p90)) b.value = Math.round(funnel.g4.p90);
+  }
+  const o = orderSize();
+  const tA = $("#g5tilesA"), tB = $("#g5tilesB");
+  if (!o || o.err){
+    tA.innerHTML = ""; tB.innerHTML = "";
+    $("#g5va").innerHTML = verdictHTML(["warning","CANNOT SIZE THE ORDER", o ? o.err : "Gate 3 has not run yet."]);
+    $("#g5vb").innerHTML = ""; $("#g5chart").innerHTML = ""; $("#g5table").innerHTML = "";
+    funnel.g5 = null;
+    return;
+  }
+  const c = cashPlan(o);
+  tA.innerHTML =
+    tile("Optimal order", fmt0(o.qStar)+" u", "unconstrained newsvendor") +
+    tile("Max affordable", fmt0(o.maxAff)+" u", "PO budget ÷ landed") +
+    tile("RECOMMENDED", fmt0(o.qRec)+" u", "clamped to MOQ and budget") +
+    tile("Service level", (o.cr*100).toFixed(1)+"%", "critical ratio Cu/(Cu+Co)") +
+    tile("Expected lost sales", fmt0(o.lost)+" u", "demand you cannot serve") +
+    tile("Expected leftover", fmt0(o.leftover)+" u", "units still on hand") +
+    tile("Season contribution", "€"+fmt0(o.contrib), "before ads and fixed costs");
+  const wA = [];
+  if (o.moqWarn) wA.push(["warning","MOQ ABOVE THE OPTIMUM","The supplier minimum of "+fmt0(o.moq)+" units is more than 20% above the "+fmt0(o.qStar)+" the model wants. Negotiate the MOQ down or reconsider the product — you are being pushed into stock you did not choose."]);
+  if (o.budWarn) wA.push(["warning","BUDGET CAPS THE ORDER","€"+fmt0(o.poBud)+" buys "+fmt0(o.maxAff)+" units, well under the optimum of "+fmt0(o.qStar)+". That is survivable only if you plan the reorder date now — running out mid-season is what kills launches."]);
+  if (!wA.length) wA.push(["good","ORDER SIZE IS CLEAN","MOQ and budget both leave room for the optimum of "+fmt0(o.qStar)+" units."]);
+  $("#g5va").innerHTML = wA.map(verdictHTML).join("");
+
+  tB.innerHTML =
+    tile("PO value", "€"+fmt0(c.po), fmt0(o.qRec)+" u × landed") +
+    tile("Import VAT", "€"+fmt0(c.vat), "out at arrival, back "+($("#c_vat").value)+" mo later") +
+    tile("Lowest cash", "€"+fmt0(c.lowest), "month "+c.lowestM) +
+    tile("Capital needed", "€"+fmt0(c.need), "deepest the hole goes") +
+    tile("Units sold in 12 mo", fmt0(c.sold)+" u", c.stockout!=null ? "stock out in month "+c.stockout : "the order lasts the year");
+  const vb = c.lowest < 0
+    ? ["critical","NOT FUNDED","Cash goes to €"+fmt0(c.lowest)+" in month "+c.lowestM+". Cut the order, stretch supplier terms, or add capital — as typed this plan runs out of money before Amazon pays you."]
+    : ["good","FUNDED","The plan stays above zero; the lowest point is €"+fmt0(c.lowest)+" in month "+c.lowestM+". That trough is your true capital requirement, not the PO value."];
+  $("#g5vb").innerHTML = verdictHTML(vb) +
+    (c.stockout!=null ? verdictHTML(["warning","STOCK RUNS OUT","The order is sold through in month "+c.stockout+" and the reorder is not modelled here (workbook Sheet 8 note). Real cash-out is higher than this line shows — plan the reorder in Sheet 6."]) : "");
+  $("#g5chart").innerHTML = cashSVG(c);
+  $("#g5table").innerHTML = `<table><tr><th>Month</th><th>Units</th><th>Cash out €</th><th>Cash in €</th><th>Net €</th><th>Cumulative €</th></tr>` +
+    c.rows.map(r=>`<tr><td>${r.m}</td><td>${fmt0(r.units)}</td><td>${fmt0(r.out)}</td><td>${fmt0(r.inn)}</td><td>${fmt0(r.net)}</td><td>${fmt0(r.cum)}</td></tr>`).join("") + `</table>`;
+
+  funnel.g5 = { qStar:o.qStar, qRec:o.qRec, maxAff:o.maxAff, cr:o.cr, lost:o.lost,
+                leftover:o.leftover, contrib:o.contrib, po:c.po, lowest:c.lowest,
+                lowestM:c.lowestM, need:c.need, sold:c.sold, stockout:c.stockout,
+                funded:c.lowest>=0, moqWarn:o.moqWarn, budWarn:o.budWarn };
+
+  // the dossier's cash row is exactly this trough
+  const dc = $("#d_cash");
+  if (dc && dc.dataset.auto) dc.value = c.need;
+
+  if (g5touched || funnel.g4)
+    setGate(5, c.lowest < 0 ? "red" : (o.moqWarn || o.budWarn) ? "yellow" : "green");
 }
 
 /* ================================================================
@@ -1161,7 +1421,7 @@ function dSave(d){
   catch(e){ return false; }
 }
 function dCapture(name, cash){
-  const g1 = funnel.g1, g2 = funnel.g2, g3 = funnel.g3, g4 = funnel.g4, g0 = funnel.g0;
+  const g1 = funnel.g1, g2 = funnel.g2, g3 = funnel.g3, g4 = funnel.g4, g0 = funnel.g0, g5 = funnel.g5;
   return {
     name,
     saved: new Date().toISOString().slice(0,10),
@@ -1182,7 +1442,11 @@ function dCapture(name, cash){
            medWeight: g2 ? g2.medWeight : null, landed: g3 ? g3.landed : null,
            beAcos: g3 ? g3.beAcos : null, bestKw: g4 ? g4.best : null,
            push: g4 ? g4.push : null, p10: g4 ? g4.p10 : null, p90: g4 ? g4.p90 : null,
-           gates: { 0:gateState[0], 1:gateState[1], 2:gateState[2], 3:gateState[3], 4:gateState[4] } },
+           payout: g3 ? g3.payout : null,
+           order: g5 ? g5.qRec : null, lowestCash: g5 ? g5.lowest : null,
+           funded: g5 ? g5.funded : null, po: g5 ? g5.po : null,
+           gates: { 0:gateState[0], 1:gateState[1], 2:gateState[2], 3:gateState[3],
+                    4:gateState[4], 5:gateState[5] } },
   };
 }
 function dScores(n, budget){
@@ -1267,7 +1531,8 @@ function dRender(){
 function dInit(){
   const d = dLoad();
   $("#d_budget").value = d.budget;
-  $("#d_save").addEventListener("click", ()=>{
+  $("#d_cash").addEventListener("input", e => { delete e.target.dataset.auto; });
+$("#d_save").addEventListener("click", ()=>{
     const st = $("#d_status"); st.className = "status";
     const name = $("#d_name").value.trim() || (funnel.g1 ? funnel.g1.keyword : "");
     if (!name){ st.className = "status err"; st.textContent = "⚠ Give the niche a name first."; return; }
@@ -1317,6 +1582,22 @@ wireDrop("#drop", "#file", handle);
 wireDrop("#drop2", "#file2", handleXray);
 wireDrop("#drop4", "#file4", handleCerebro);
 $("#g3form").addEventListener("input", ()=>calcUnitEcon(true));
+(function initGate5(){
+  const sel = $("#c_month");
+  sel.innerHTML = MONTHS.map((m,i)=>`<option value="${i}">${m}</option>`).join("");
+  sel.value = String(new Date().getMonth());
+  ["#o_p10","#o_p90","#o_salv","#o_hold","#o_moq","#o_pobud",
+   "#c_start","#c_dep","#c_bal","#c_arr","#c_vat","#c_launch","#c_adsu","#c_fix"].forEach(id=>{
+    $(id).addEventListener("input", ()=>{
+      g5touched = true;
+      // typing into an auto-filled or assumed field makes it yours
+      delete $(id).dataset.auto;
+      delete $(id).dataset.assumed;
+      calcGate5();
+    });
+  });
+  sel.addEventListener("change", ()=>{ g5touched = true; calcGate5(); });
+})();
 ["#k_landed","#k_disc","#k_spend","#k_max"].forEach(id=>{
   $(id).addEventListener("input", ()=>{ if (id==="#k_landed") delete $(id).dataset.auto; renderCerebro(); });
 });

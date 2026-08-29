@@ -15,12 +15,13 @@ t('<html lang="en">', '<html lang="ru">')
 t('<title>EaseStore · Niche Funnel</title>', '<title>EaseStore · Воронка ниш</title>')
 t('<h1>Niche Funnel <span style="font-size:12px;color:var(--ink-muted);font-weight:400">beta · easestore.de</span> <a href="ru/" style="font-size:12px;font-weight:400;color:var(--series-1);margin-left:8px">RU</a></h1>',
   '<h1>Воронка ниш <span style="font-size:12px;color:var(--ink-muted);font-weight:400">beta · easestore.de</span> <a href="../" style="font-size:12px;font-weight:400;color:var(--series-1);margin-left:8px">EN</a></h1>')
-t('<p class="tag">Five gates, in order: may you legally sell it at all → is demand real and rising → can you win the page → does a unit earn enough → which keyword opens the door. Gate 0 needs no files; the rest take the Helium&nbsp;10 exports. A yellow or red gate never blocks you — it tells you what you are accepting if you continue.</p>',
-  '<p class="tag">Пять этапов по порядку: можно ли это вообще законно продавать → спрос реален и растёт → можно ли выиграть страницу → зарабатывает ли юнит достаточно → какой ключ открывает дверь. Этапу 0 файлы не нужны; остальным нужны экспорты Helium&nbsp;10. Жёлтый или красный этап никогда не блокирует: он говорит, что именно вы принимаете, если идёте дальше.</p>')
+t('<p class="tag">Six gates, in order: may you legally sell it at all → is demand real and rising → can you win the page → does a unit earn enough → which keyword opens the door → can you afford the order. Gates 0 and 5 need no files; the rest take the Helium&nbsp;10 exports. A yellow or red gate never blocks you — it tells you what you are accepting if you continue.</p>',
+  '<p class="tag">Шесть этапов по порядку: вправе ли вы это вообще продавать → спрос реален и растёт → можно ли выиграть страницу → зарабатывает ли юнит достаточно → какой ключ открывает дверь → потянете ли вы заказ. Этапам 0 и 5 файлы не нужны, остальным нужны экспорты Helium&nbsp;10. Жёлтый или красный этап никогда не блокирует: он говорит, что именно вы принимаете, если идёте дальше.</p>')
+
+# ---------- steps ----------
 t('<b>Your files never leave your browser.</b> Everything is computed on your device; nothing is uploaded or stored.',
   '<b>Ваши файлы не покидают браузер.</b> Всё считается на вашем устройстве; ничего не загружается и не хранится.')
 
-# ---------- steps ----------
 t('<b>1</b>&nbsp;Seasonality &amp; direction', '<b>1</b>&nbsp;Сезонность и направление')
 t('<b>2</b>&nbsp;Competition (Xray)', '<b>2</b>&nbsp;Конкуренция (Xray)')
 t('<b>3</b>&nbsp;Unit economics', '<b>3</b>&nbsp;Юнит-экономика')
@@ -179,13 +180,8 @@ t('toLocaleString("en-US"', 'toLocaleString("ru-RU"')
 
 # ---------- JS: gate machinery ----------
 t('{ green:"PASS", yellow:"CAUTION", red:"CHANGE NICHE?" }', '{ green:"ПРОЙДЕН", yellow:"ОСТОРОЖНО", red:"СМЕНИТЬ НИШУ?" }')
-t('const nxt = n<4 ? ` Next: Gate ${n+1}.` : " Funnel done — continue in the workbook (Sheets 4–8: full checklist, order size, cash plan).";',
-  'const nxt = n<4 ? ` Дальше: Этап ${n+1}.` : " Воронка пройдена — продолжайте в книге (Листы 4–8: полный чек-лист, размер заказа, кэш-план).";')
-t('"✓ Gate passed."', '"✓ Этап пройден."')
-t('"▲ You can continue, but the warnings above are the risks you are accepting."',
-  '"▲ Можно идти дальше, но предупреждения выше — это риски, которые вы принимаете."')
-t('"✖ This niche failed hard checks. You can still continue to learn the numbers — but for a first product, changing the niche is the recommendation."',
-  '"✖ Ниша провалила жёсткие проверки. Можно продолжить ради цифр — но для первого товара рекомендация: сменить нишу."')
+t('const nxt = n<5 ? ` Next: Gate ${n+1}.` : " Funnel done — save it to the dossier below, then take the order to the workbook (Sheet 7 PPC planner, Sheet 12 multi-year plan).";',
+  'const nxt = n<5 ? ` Дальше: Этап ${n+1}.` : " Воронка пройдена — сохраните её в досье ниже, затем несите заказ в книгу (Лист 7 план PPC, Лист 12 многолетний план).";')
 
 # ---------- JS: shared errors ----------
 t('"Could not read any rows from the file."', '"Не удалось прочитать строки из файла."')
@@ -344,7 +340,7 @@ t('tile("Amazon payout / unit", "€"+payout.toFixed(2), "after referral, FBA, s
 t('tile("Landed cost / unit", "€"+landed.toFixed(2), "EXW + freight + duty(CIF) + prep")',
   'tile("Себестоимость за юнит", "€"+landed.toFixed(2), "EXW + фрахт + пошлина(CIF) + преп")')
 t('tile("Contribution margin", "€"+cm.toFixed(2), "per unit, before ads")',
-  'tile("Contribution margin", "€"+cm.toFixed(2), "за юнит, до рекламы")')
+  'tile("Маржинальный доход", "€"+cm.toFixed(2), "за юнит, до рекламы")')
 t('tile("Margin % of net", (margin*100).toFixed(1)+"%", "gate: ≥35% before ads")',
   'tile("Маржа % от нетто", (margin*100).toFixed(1)+"%", "ворота: ≥35% до рекламы")')
 t('tile("Breakeven ACOS", (beAcos*100).toFixed(1)+"%", "CM ÷ GROSS price (console basis)")',
@@ -408,16 +404,8 @@ t('<b>Saved on this device only.</b> The dossier lives in this browser\'s local 
   '<b>Сохраняется только на этом устройстве.</b> Досье лежит в локальном хранилище этого браузера. Ничего не загружается; очистка данных браузера очистит и досье.')
 t('Niche / keyword<input id="d_name" type="text" placeholder="e.g. schubladen organizer küche">',
   'Ниша / ключ<input id="d_name" type="text" placeholder="напр. schubladen organizer küche">')
-t('First order + compliance cash need (€)<input id="d_cash" type="number" step="100" placeholder="workbook Sheets 6+8">',
-  'Деньги на первый заказ + комплаенс (€)<input id="d_cash" type="number" step="100" placeholder="книга, Листы 6+8">')
-t('Budget incl. reorder reserve (€)<input id="d_budget" type="number" step="100" value="6500">',
-  'Бюджет с резервом на дозаказ (€)<input id="d_budget" type="number" step="100" value="6500">')
-t('<button class="btn" id="d_save" type="button">Save this niche</button>',
-  '<button class="btn" id="d_save" type="button">Сохранить нишу</button>')
-t('<button class="btn" id="d_print" type="button">Print / save as PDF</button>',
-  '<button class="btn" id="d_print" type="button">Печать / сохранить в PDF</button>')
-t('Everything except the cash need is taken from the gates above as they stand right now. A niche saved before you ran a gate keeps that column blank, and a blank input leaves the score blank — same rule as Sheet 5.',
-  'Всё, кроме потребности в деньгах, берётся из этапов выше в их текущем состоянии. Ниша, сохранённая до прохождения этапа, оставляет эту строку пустой, а пустой ввод оставляет пустым балл — то же правило, что в Листе 5.')
+t('First order + compliance cash need (€)<input id="d_cash" type="number" step="100" placeholder="auto-fills from Gate 5" data-auto="1">',
+  'Деньги на первый заказ + соответствие (€)<input id="d_cash" type="number" step="100" placeholder="подтянется из Этапа 5" data-auto="1">')
 
 t('label:"Page-1 revenue, €/month",             src:"Gate 2"', 'label:"Выручка страницы 1, €/мес",             src:"Этап 2"')
 t('label:"Top ASIN share of page revenue",      src:"Gate 2"', 'label:"Доля топ-ASIN в выручке страницы",      src:"Этап 2"')
@@ -486,6 +474,104 @@ t('const blanks = DCRIT.filter(c => rec.v[c.id] == null).map(c => c.src === "typ
 t('st.textContent = (at>=0 ? "Updated “" : "Saved “") + name + "”." +\n      (blanks.length ? " Blank: " + [...new Set(blanks)].join(", ") + " — the score stays blank until those exist." : "");',
   'st.textContent = (at>=0 ? "Обновлено «" : "Сохранено «") + name + "»." +\n      (blanks.length ? " Пусто: " + [...new Set(blanks)].join(", ") + " — балл останется пустым, пока их нет." : "");')
 
+t('"✓ Gate passed."', '"✓ Этап пройден."')
+t('"▲ You can continue, but the warnings above are the risks you are accepting."',
+  '"▲ Можно идти дальше, но предупреждения выше — это риски, которые вы принимаете."')
+t('"✖ This niche failed hard checks. You can still continue to learn the numbers — but for a first product, changing the niche is the recommendation."',
+  '"✖ Ниша провалила жёсткие проверки. Можно продолжить ради цифр — но для первого товара рекомендация: сменить нишу."')
+t('Budget incl. reorder reserve (€)<input id="d_budget" type="number" step="100" value="6500">',
+  'Бюджет с резервом на дозаказ (€)<input id="d_budget" type="number" step="100" value="6500">')
+t('<button class="btn" id="d_save" type="button">Save this niche</button>',
+  '<button class="btn" id="d_save" type="button">Сохранить нишу</button>')
+t('<button class="btn" id="d_print" type="button">Print / save as PDF</button>',
+  '<button class="btn" id="d_print" type="button">Печать / сохранить в PDF</button>')
+t('Everything except the cash need is taken from the gates above as they stand right now. A niche saved before you ran a gate keeps that column blank, and a blank input leaves the score blank — same rule as Sheet 5.',
+  'Всё, кроме потребности в деньгах, берётся из этапов выше в их текущем состоянии. Ниша, сохранённая до прохождения этапа, оставляет эту строку пустой, а пустой ввод оставляет пустым балл — то же правило, что в Листе 5.')
+
+# ---------- gate 5 ----------
+t('<b>5</b>&nbsp;Order size &amp; cash', '<b>5</b>&nbsp;Размер заказа и деньги')
+t('Gate 5 — Order size &amp; cash <span class="gchip">not run</span>',
+  'Этап 5 — Размер заказа и деньги <span class="gchip">не запускался</span>')
+t('<p class="gsub">Workbook Sheets 6 + 8. How many units to buy when demand is unknowable, and whether the money survives the gap between paying the supplier and being paid by Amazon. No file — it runs on Gates 1, 3 and 4.</p>',
+  '<p class="gsub">Листы 6 + 8 книги. Сколько юнитов заказывать, когда спрос знать невозможно, и переживут ли деньги разрыв между оплатой поставщику и выплатой от Amazon. Файл не нужен — считается на данных Этапов 1, 3 и 4.</p>')
+t('<h3 class="cardtitle">First order size</h3>', '<h3 class="cardtitle">Размер первого заказа</h3>')
+t('<div class="meta">Newsvendor model: balances the margin lost on a stockout against the cost of a unit left over.</div>',
+  '<div class="meta">Модель газетчика: взвешивает маржу, потерянную на дефиците, против стоимости лишнего юнита.</div>')
+t('Pessimistic season sales, P10 (units)', 'Пессимистичные продажи за сезон, P10 (юниты)')
+t('Optimistic season sales, P90 (units)', 'Оптимистичные продажи за сезон, P90 (юниты)')
+t('Recovered per leftover unit (€)', 'Возврат с одного лишнего юнита (€)')
+t('Extra storage per leftover (€)', 'Доп. хранение на лишний юнит (€)')
+t('Supplier MOQ (units)', 'MOQ поставщика (юниты)')
+t('Budget for this PO, goods only (€)', 'Бюджет на эту закупку, только товар (€)')
+t('<i></i>Dashed = a workbook default, not your number. Replace them with supplier reality before you trust the order size. P10/P90 auto-fill from Gate 4 until you type your own.',
+  '<i></i>Пунктир — значение по умолчанию из книги, а не ваше число. Замените их реальностью поставщика, прежде чем доверять размеру заказа. P10/P90 подтягиваются из Этапа 4, пока вы не введёте свои.')
+t('<h3 class="cardtitle">12-month cash plan</h3>', '<h3 class="cardtitle">План денег на 12 месяцев</h3>')
+t('<div class="meta">Money leaves in lumps and comes back as a drip. Only one number matters: the lowest point.</div>',
+  '<div class="meta">Деньги уходят кусками, а возвращаются по капле. Значение имеет одно число — низшая точка.</div>')
+t('Starting cash (€)', 'Стартовые деньги (€)')
+t('Order placed in<select id="c_month">', 'Заказ размещён в<select id="c_month">')
+t('Deposit at order (%)', 'Предоплата при заказе (%)')
+t('Balance paid in month #', 'Остаток оплачен в месяце №')
+t('Goods arrive in month #', 'Товар приходит в месяце №')
+t('Import VAT refunded after (months)', 'Импортный VAT возвращается через (мес.)')
+t('Launch ads, first 2 selling months (€/mo)', 'Реклама запуска, первые 2 месяца продаж (€/мес)')
+t('Ongoing ads per unit sold (€)', 'Постоянная реклама на проданный юнит (€)')
+t('Fixed costs (€/month)', 'Постоянные расходы (€/мес)')
+t('<summary>Month by month</summary>', '<summary>По месяцам</summary>')
+
+t('tile("Optimal order", fmt0(o.qStar)+" u", "unconstrained newsvendor")',
+  'tile("Оптимальный заказ", fmt0(o.qStar)+" ю", "модель без ограничений")')
+t('tile("Max affordable", fmt0(o.maxAff)+" u", "PO budget ÷ landed")',
+  'tile("Максимум по бюджету", fmt0(o.maxAff)+" ю", "бюджет закупки ÷ себестоимость")')
+t('tile("RECOMMENDED", fmt0(o.qRec)+" u", "clamped to MOQ and budget")',
+  'tile("РЕКОМЕНДАЦИЯ", fmt0(o.qRec)+" ю", "с учётом MOQ и бюджета")')
+t('tile("Service level", (o.cr*100).toFixed(1)+"%", "critical ratio Cu/(Cu+Co)")',
+  'tile("Уровень сервиса", (o.cr*100).toFixed(1)+"%", "критическое отношение Cu/(Cu+Co)")')
+t('tile("Expected lost sales", fmt0(o.lost)+" u", "demand you cannot serve")',
+  'tile("Ожидаемый дефицит", fmt0(o.lost)+" ю", "спрос, который вы не покроете")')
+t('tile("Expected leftover", fmt0(o.leftover)+" u", "units still on hand")',
+  'tile("Ожидаемый остаток", fmt0(o.leftover)+" ю", "юниты, оставшиеся на руках")')
+t('tile("Season contribution", "€"+fmt0(o.contrib), "before ads and fixed costs")',
+  'tile("Маржа за сезон", "€"+fmt0(o.contrib), "до рекламы и постоянных расходов")')
+t('tile("PO value", "€"+fmt0(c.po), fmt0(o.qRec)+" u × landed")',
+  'tile("Стоимость закупки", "€"+fmt0(c.po), fmt0(o.qRec)+" ю × себестоимость")')
+t('tile("Import VAT", "€"+fmt0(c.vat), "out at arrival, back "+($("#c_vat").value)+" mo later")',
+  'tile("Импортный VAT", "€"+fmt0(c.vat), "уходит при приходе, назад через "+($("#c_vat").value)+" мес.")')
+t('tile("Lowest cash", "€"+fmt0(c.lowest), "month "+c.lowestM)',
+  'tile("Низшая точка", "€"+fmt0(c.lowest), "месяц "+c.lowestM)')
+t('tile("Capital needed", "€"+fmt0(c.need), "deepest the hole goes")',
+  'tile("Нужно капитала", "€"+fmt0(c.need), "насколько глубока яма")')
+t('tile("Units sold in 12 mo", fmt0(c.sold)+" u", c.stockout!=null ? "stock out in month "+c.stockout : "the order lasts the year")',
+  'tile("Продано за 12 мес.", fmt0(c.sold)+" ю", c.stockout!=null ? "товар кончится в месяце "+c.stockout : "заказа хватает на год")')
+
+t('"P90 must be above P10 — they are the ends of a range, not a guess and a hope."',
+  '"P90 должен быть выше P10 — это концы диапазона, а не догадка и надежда."')
+t('"Gate 3 has no landed cost yet."', '"В Этапе 3 ещё нет себестоимости с доставкой."')
+t('"Contribution margin is not positive in Gate 3 — there is no order size that makes this work."',
+  '"Маржинальный доход в Этапе 3 не положительный — никакой размер заказа это не спасёт."')
+t('["warning","CANNOT SIZE THE ORDER", o ? o.err : "Gate 3 has not run yet."]',
+  '["warning","НЕЛЬЗЯ ПОСЧИТАТЬ ЗАКАЗ", o ? o.err : "Этап 3 ещё не запускался."]')
+t('["warning","MOQ ABOVE THE OPTIMUM","The supplier minimum of "+fmt0(o.moq)+" units is more than 20% above the "+fmt0(o.qStar)+" the model wants. Negotiate the MOQ down or reconsider the product — you are being pushed into stock you did not choose."]',
+  '["warning","MOQ ВЫШЕ ОПТИМУМА","Минимум поставщика в "+fmt0(o.moq)+" юнитов более чем на 20% выше "+fmt0(o.qStar)+", которые хочет модель. Сбивайте MOQ или пересматривайте товар — вас заталкивают в запас, который вы не выбирали."]')
+t('["warning","BUDGET CAPS THE ORDER","€"+fmt0(o.poBud)+" buys "+fmt0(o.maxAff)+" units, well under the optimum of "+fmt0(o.qStar)+". That is survivable only if you plan the reorder date now — running out mid-season is what kills launches."]',
+  '["warning","БЮДЖЕТ ОГРАНИЧИВАЕТ ЗАКАЗ","€"+fmt0(o.poBud)+" покупают "+fmt0(o.maxAff)+" юнитов — сильно меньше оптимума в "+fmt0(o.qStar)+". Это переживаемо, только если дату повторного заказа вы планируете уже сейчас: закончиться в середине сезона — то, что убивает запуски."]')
+t('["good","ORDER SIZE IS CLEAN","MOQ and budget both leave room for the optimum of "+fmt0(o.qStar)+" units."]',
+  '["good","РАЗМЕР ЗАКАЗА ЧИСТЫЙ","И MOQ, и бюджет оставляют место для оптимума в "+fmt0(o.qStar)+" юнитов."]')
+t('["critical","NOT FUNDED","Cash goes to €"+fmt0(c.lowest)+" in month "+c.lowestM+". Cut the order, stretch supplier terms, or add capital — as typed this plan runs out of money before Amazon pays you."]',
+  '["critical","ДЕНЕГ НЕ ХВАТАЕТ","Касса уходит в €"+fmt0(c.lowest)+" в месяце "+c.lowestM+". Режьте заказ, растягивайте условия поставщика или добавляйте капитал — как введено, план кончится раньше, чем Amazon вам заплатит."]')
+t('["good","FUNDED","The plan stays above zero; the lowest point is €"+fmt0(c.lowest)+" in month "+c.lowestM+". That trough is your true capital requirement, not the PO value."]',
+  '["good","ДЕНЕГ ХВАТАЕТ","План не уходит ниже нуля; низшая точка — €"+fmt0(c.lowest)+" в месяце "+c.lowestM+". Именно эта яма и есть ваша реальная потребность в капитале, а не стоимость закупки."]')
+t('["warning","STOCK RUNS OUT","The order is sold through in month "+c.stockout+" and the reorder is not modelled here (workbook Sheet 8 note). Real cash-out is higher than this line shows — plan the reorder in Sheet 6."]',
+  '["warning","ТОВАР ЗАКОНЧИТСЯ","Заказ распродаётся в месяце "+c.stockout+", а повторная закупка здесь не моделируется (примечание к Листу 8). Реальный отток больше, чем показывает линия — планируйте повторный заказ в Листе 6."]')
+t('<h3>Cumulative cash, months 0–12</h3>', '<h3>Накопленные деньги, месяцы 0–12</h3>')
+t('Lowest point €${fmt0(c.lowest)} in month ${c.lowestM}${c.phased?" · units phased on the Gate 1 season":" · units spread evenly (run Gate 1 to phase them on the season)"}',
+  'Низшая точка €${fmt0(c.lowest)} в месяце ${c.lowestM}${c.phased?" · юниты разложены по сезону из Этапа 1":" · юниты распределены ровно (запустите Этап 1, чтобы разложить их по сезону)"}')
+t('<tr><th>Month</th><th>Units</th><th>Cash out €</th><th>Cash in €</th><th>Net €</th><th>Cumulative €</th></tr>',
+  '<tr><th>Месяц</th><th>Юниты</th><th>Отток €</th><th>Приток €</th><th>Нетто €</th><th>Накоплено €</th></tr>')
+
+t('<li><b>Gate 5:</b> no file. P10/P90 arrive from Gate 4, margin and landed cost from Gate 3, the season from Gate 1. What you must supply yourself is the supplier\'s MOQ, your PO budget, and what a leftover unit is really worth.</li>',
+  '<li><b>Этап 5:</b> файла нет. P10/P90 приходят из Этапа 4, маржа и себестоимость — из Этапа 3, сезон — из Этапа 1. От вас нужны MOQ поставщика, бюджет закупки и честная оценка того, сколько на самом деле стоит лишний юнит.</li>')
+
 # ---------- apply ----------
 missing = []
 for old, new, n in P:
@@ -505,5 +591,11 @@ os.makedirs(os.path.dirname(DST), exist_ok=True)
 open(DST, "w", encoding="utf-8").write(s)
 # leftover-English sanity scan (rough): count suspicious phrases
 import re
-left = [w for w in ["Drop the", "Gate passed", "workbook (Sheets", "searches per sale", "per month\"", "listings (gate"] if w in s]
+SUSPECT = ["Drop the", "Gate passed", "workbook (Sheets", "searches per sale",
+           "per month\"", "listings (gate", "never leave your browser", "You can continue",
+           "failed hard checks", "Save this niche", "Print / save", "Budget incl",
+           "Everything except", "Optimal order", "Lowest cash", "Month by month",
+           '>not run<', '= "not run"', "FUNDED", "Order placed in",
+           "Starting cash", "Supplier MOQ"]
+left = [w for w in SUSPECT if w in s]
 print("done ->", DST, "| leftover suspects:", left if left else "none")

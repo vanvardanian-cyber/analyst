@@ -279,6 +279,67 @@ if page.get("real") and mir.get("real"):
     if not ok:
         fails.append("REAL G1 still titles the card with the generic column header")
 
+# ---- GATE 5. Fed workbook Sheet 6's own inputs, the page must reproduce the
+#      workbook's own cached values. These are literals read out of the xlsx,
+#      not numbers the mirror computed, so they pin the page to the workbook.
+G5, mG5 = page["gate5"], mir["gate5"]
+same("G5 no JS errors", G5["pageErrors"], [])
+for label, tile, want in [("optimal order (Sheet 6 C22)",   "Optimal order",       1159),
+                          ("max affordable (C23)",          "Max affordable",       386),
+                          ("recommended order (C24)",       "RECOMMENDED",          386),
+                          ("expected lost sales (C26)",     "Expected lost sales",  617),
+                          ("expected leftover (C27)",       "Expected leftover",      3)]:
+    eq(f"G5 {label}", G5["A"].get(tile), want)
+eq("G5 service level (C21)",          G5["A"].get("Service level"),       69.5, 0.05)
+eq("G5 season contribution (C28)",    G5["A"].get("Season contribution"), 7763, 1)
+eq("G5 PO value (Sheet 8 C8)",        G5["B"].get("PO value"),            4991, 1)
+eq("G5 import VAT (Sheet 8 C12)",     G5["B"].get("Import VAT"),           948, 1)
+# and the same numbers again from the independent mirror
+eq("G5 mirror agrees: recommended",   G5["A"].get("RECOMMENDED"),   mG5["qRec"])
+eq("G5 mirror agrees: lost sales",    G5["A"].get("Expected lost sales"), mG5["lost"])
+eq("G5 mirror agrees: lowest cash",   G5["B"].get("Lowest cash"),   mG5["lowest"], 1)
+eq("G5 mirror agrees: capital need",  G5["B"].get("Capital needed"), mG5["need"], 1)
+same("G5 budget-capped warning fires", any("BUDGET CAPS" in v for v in G5["va"]), True)
+same("G5 mirror agrees the budget caps it", mG5["budWarn"], True)
+same("G5 MOQ warning stays silent",   any("MOQ ABOVE" in v for v in G5["va"]), False)
+same("G5 cash plan is funded",        any("FUNDED" in v for v in G5["vb"]), True)
+same("G5 chip is CAUTION (Sheet 6 warning, cash still positive)", G5["cls"], "yellow")
+# the deliberate divergence from Sheet 8's example: never sell more than the order
+same("G5 plans exactly the order, not more", G5["B"].get("Units sold in 12 mo"), "386 u")
+same("G5 mirror agrees units sold == order", mG5["sold"], mG5["qRec"])
+same("G5 13 month rows", len(G5["rows"]), 13)
+# Gate 5 feeds the dossier's cash row
+eq("G5 fills the dossier cash need", G5["dossierCash"], mG5["need"], 1)
+
+# ---- The RU page is generated, so English leaking into it is a build-script bug,
+#      not a translation opinion. Three of these strings shipped in English until
+#      the Gate 5 work; the build scan only caught one of them.
+RU_MUST_NOT_CONTAIN = [
+    "Gate passed", "You can continue", "failed hard checks", "Save this niche",
+    "Print / save", "never leave your browser", "Contribution margin",
+    "Optimal order", "Max affordable", "Lowest cash", "Capital needed",
+    "Month by month", "Starting cash", "Supplier MOQ", "FUNDED", "not run",
+]
+ru_text = page["ru"].get("bodyText") or ""
+leaked = [w for w in RU_MUST_NOT_CONTAIN if w in ru_text]
+checks.append((not leaked, "RU page carries no English UI chrome", leaked or "none",
+               "no English strings"))
+if leaked:
+    fails.append(f"RU page still shows English: {leaked}")
+
+# ---- Translation must not move a number. Same defaults on both pages, so every
+#      Gate 5 tile must read identically apart from the language of the label.
+en_g5 = page["en"].get("g5values") or []
+ru_g5 = page["ru"].get("g5values") or []
+checks.append((len(en_g5) == 12, "EN Gate 5 rendered all 12 tiles", len(en_g5), 12))
+if len(en_g5) != 12:
+    fails.append(f"EN Gate 5 rendered {len(en_g5)} tiles, expected 12")
+# The RU page formats numbers with ru-RU separators and writes "ю" for units, both
+# deliberate. Compare the digits, which translation must never change.
+def digits(xs):
+    return [re.sub(r"[^\d.]", "", x.replace("\u00a0", "").replace(",", "")) for x in xs]
+same("EN/RU Gate 5 numbers identical", digits(en_g5), digits(ru_g5))
+
 # ---- no JS errors on either page
 same("EN page: no JS errors", en["consoleErrors"], [])
 same("RU page: no JS errors", ru["consoleErrors"], [])
