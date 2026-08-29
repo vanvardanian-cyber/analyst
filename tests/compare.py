@@ -340,6 +340,34 @@ def digits(xs):
     return [re.sub(r"[^\d.]", "", x.replace("\u00a0", "").replace(",", "")) for x in xs]
 same("EN/RU Gate 5 numbers identical", digits(en_g5), digits(ru_g5))
 
+# ---- Gate 4 must never report a verdict it could not compute.
+#      Before this, an Xray Keywords export rendered a confident red
+#      ("NO REAL DEMAND DOORS") purely because every push cost was null.
+M = page["gate4missing"]
+xk = M["xrayKeywords"]
+checks.append((bool(xk["error"]) and "Xray Keywords" in (xk["error"] or ""),
+               "G4 refuses the Xray Keywords export by name", xk["error"], "names the file"))
+if not (xk["error"] and "Xray Keywords" in xk["error"]):
+    fails.append("G4 did not refuse the Xray Keywords export")
+same("G4 refuses it instead of scoring it", xk["rendered"], False)
+same("G4 gives it no colour at all", xk["cls"], None)
+for word in ("CPR", "WEEK"):
+    checks.append((word in (xk["error"] or ""), f"G4 refusal explains '{word}'", word in (xk["error"] or ""), True))
+
+nc = M["noCpr"]
+same("G4 no-CPR file is not called a bad niche", "NO REAL DEMAND DOORS" in (nc["verdict"] or ""), False)
+same("G4 no-CPR file says it cannot judge", "CANNOT JUDGE" in (nc["verdict"] or ""), True)
+same("G4 no-CPR file is not red", nc["cls"], "yellow")
+
+pc = M["partialCpr"]
+same("G4 still judges when only some rows have CPR", pc["cls"], "green")
+checks.append(("3 without CPR" in (pc["meta"] or ""),
+               "G4 says how many rows it left out", pc["meta"], "names the skipped count"))
+if "3 without CPR" not in (pc["meta"] or ""):
+    fails.append("G4 silently dropped the rows without CPR")
+for k, v in M.items():
+    same(f"G4 {k}: no JS errors", v["pageErrors"], [])
+
 # ---- no JS errors on either page
 same("EN page: no JS errors", en["consoleErrors"], [])
 same("RU page: no JS errors", ru["consoleErrors"], [])

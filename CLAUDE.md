@@ -100,6 +100,18 @@ Two deliverables live here:
   of sales against a 386-unit order, which overstates cash-in. The page stops at the
   order and names the stock-out month. The reorder is still not modelled either way.
 
+- Gate 4 input rule (v4.1): Keyword Sales are read as PER MONTH, matching Sheet 6 B36.
+  Helium 10's newer **Xray Keywords** tool counts them PER WEEK and has no CPR column,
+  so that export is refused by name. Reading it as monthly would flatter every keyword
+  by ~4.3× on searches-per-sale and shrink Gate 4's P10/P90 (and therefore Gate 5's
+  order size) by the same factor. STILL OPEN: nobody has confirmed whether CEREBRO's
+  Keyword Sales is monthly. If Cerebro's tooltip also says weekly, then Gate 4 AND
+  workbook Sheet 6 B36/B40/B41 are both wrong and the fix is in the workbook first.
+- No gate may state a verdict it could not compute. Gate 4 used to print a confident
+  red ("NO REAL DEMAND DOORS") when every push cost was null — i.e. when the file simply
+  had no CPR. Missing data now reads "CANNOT JUDGE", and a file with only some CPRs is
+  judged on those rows while the meta line names how many were left out.
+
 ## Backlog (agreed priority order)
 1. ~~**Gate 0**~~ — done. See the gate logic section above.
 2. ~~**Dossier**~~ — done. Sheet 5 rows 21–34 unchanged (weights, bands, ≥70/50–69/<50,

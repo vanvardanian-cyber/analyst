@@ -365,17 +365,18 @@ t('intent="OK"; iStat="green"', 'intent="НОРМАЛЬНЫЙ"; iStat="green"')
 t('intent="WEAK — mostly window-shopping"', 'intent="СЛАБЫЙ — в основном разглядывают витрину"')
 t('intent="LOOKERS — searches don\'t convert"', 'intent="ЗЕВАКИ — поиски не конвертируются"')
 t('<h3 class="cardtitle">Keyword check</h3>', '<h3 class="cardtitle">Проверка ключей</h3>')
-t(' keywords · push cost at landed €', ' ключей · цена разгона при себестоимости €')
+t(' keywords${noPush&&canJudge?" ("+noPush+" without CPR, left out of the affordability check)":""} · push cost at landed €',
+  ' ключей${noPush&&canJudge?" ("+noPush+" без CPR — не участвуют в проверке по деньгам)":""} · цена разгона при себестоимости €')
 t(' discount + €', ' скидка + €')
 t('/day ads × 8 days', '/день рекламы × 8 дней')
 t('${tile("Keyword sales, total", fmt0(totalSales)+"/mo", "overlaps between keywords — upper bound")}',
   '${tile("Продажи по ключам, всего", fmt0(totalSales)+"/мес", "ключи пересекаются — верхняя граница")}')
 t('${tile("Best launch keyword", best?best.kw:"—", best?("push ≈ €"+fmt0(best.push)):"no viable candidate")}',
   '${tile("Лучший ключ для запуска", best?best.kw:"—", best?("разгон ≈ €"+fmt0(best.push)):"жизнеспособного кандидата нет")}')
-t('${tile("Suggested P10", fmt0(totalSales*0.04*12), "4% share × 12 months → workbook Sheet 6")}',
-  '${tile("Рекомендуемый P10", fmt0(totalSales*0.04*12), "доля 4% × 12 мес → книга, Лист 6")}')
-t('${tile("Suggested P90", fmt0(totalSales*0.15*12), "15% share × 12 months → workbook Sheet 6")}',
-  '${tile("Рекомендуемый P90", fmt0(totalSales*0.15*12), "доля 15% × 12 мес → книга, Лист 6")}')
+t('${tile("Suggested P10", fmt0(totalSales*0.04*12), "4% share × 12 months, Keyword Sales read as MONTHLY")}',
+  '${tile("Рекомендуемый P10", fmt0(totalSales*0.04*12), "доля 4% × 12 мес, Keyword Sales считаются ЗА МЕСЯЦ")}')
+t('${tile("Suggested P90", fmt0(totalSales*0.15*12), "15% share × 12 months, Keyword Sales read as MONTHLY")}',
+  '${tile("Рекомендуемый P90", fmt0(totalSales*0.15*12), "доля 15% × 12 мес, Keyword Sales считаются ЗА МЕСЯЦ")}')
 t(">FAD? +'+fmt0(k.trend)+'% trend</span>", ">ХАЙП? +'+fmt0(k.trend)+'% тренд</span>")
 t('SV ${fmt0(k.sv)} · sales ${k.sales==null?"—":fmt0(k.sales)}/mo · ', 'SV ${fmt0(k.sv)} · продажи ${k.sales==null?"—":fmt0(k.sales)}/мес · ')
 t('+" searches per sale — "', '+" поисков на продажу — "')
@@ -571,6 +572,15 @@ t('<tr><th>Month</th><th>Units</th><th>Cash out €</th><th>Cash in €</th><th>
 
 t('<li><b>Gate 5:</b> no file. P10/P90 arrive from Gate 4, margin and landed cost from Gate 3, the season from Gate 1. What you must supply yourself is the supplier\'s MOQ, your PO budget, and what a leftover unit is really worth.</li>',
   '<li><b>Этап 5:</b> файла нет. P10/P90 приходят из Этапа 4, маржа и себестоимость — из Этапа 3, сезон — из Этапа 1. От вас нужны MOQ поставщика, бюджет закупки и честная оценка того, сколько на самом деле стоит лишний юнит.</li>')
+
+t('"This is the Xray Keywords export. Gate 4 needs the Cerebro keyword table instead. Two reasons: Xray Keywords has no CPR column, so the cost of pushing to page 1 cannot be worked out; and it counts Keyword Sales per WEEK, while this gate reads them per month. Cerebro → Analyze Keywords → export the results table."',
+  '"Это экспорт Xray Keywords. Этапу 4 нужна таблица ключей из Cerebro. Две причины: в Xray Keywords нет колонки CPR, поэтому цену разгона на страницу 1 посчитать нечем; и Keyword Sales там считаются ЗА НЕДЕЛЮ, а этот этап читает их за месяц. Cerebro → Analyze Keywords → экспорт таблицы результатов."')
+t('["warning","CANNOT JUDGE — NO CPR IN THIS FILE","Not one keyword in this file has a CPR, so the cost of pushing to page 1 cannot be worked out for any of them. This says nothing about the niche — it is missing data. Export the keyword results table from Cerebro, which carries CPR."]',
+  '["warning","НЕЧЕМ СУДИТЬ — В ФАЙЛЕ НЕТ CPR","Ни у одного ключа в файле нет CPR, поэтому цену разгона на страницу 1 посчитать не из чего. Это ничего не говорит о нише — это нехватка данных. Выгрузите таблицу ключей из Cerebro, там CPR есть."]')
+# NOTE: pairs apply in order, and the "Searches-per-sale = ..." sentence after this
+# one is translated by an EARLIER pair. So this pair must cover only the new prefix.
+t('This gate reads Keyword Sales as sales per MONTH, matching workbook Sheet 6. Helium 10\'s newer Xray Keywords tool counts them per WEEK — that file is refused above, because reading weekly numbers as monthly would make every keyword look about 4.3× better than it is. ',
+  'Этот этап читает Keyword Sales как продажи ЗА МЕСЯЦ — так же, как Лист 6 книги. Новый инструмент Helium 10 Xray Keywords считает их ЗА НЕДЕЛЮ; такой файл отклоняется выше, потому что чтение недельных чисел как месячных сделало бы каждый ключ примерно в 4,3 раза лучше, чем он есть. ')
 
 # ---------- apply ----------
 missing = []

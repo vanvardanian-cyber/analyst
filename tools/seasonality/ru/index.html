@@ -1093,6 +1093,10 @@ function parseCerebro(rows){
     if (header.some(h => h === "asin")) throw new Error("Это экспорт Xray — он идёт в Этап 2 выше.");
     throw new Error("Не похоже на экспорт таблицы ключей Cerebro (нет колонок Keyword Phrase / Search Volume).");
   }
+  // Xray Keywords looks almost like the Cerebro table but has no CPR, and its
+  // Keyword Sales are counted per WEEK. Both would be judged wrongly here.
+  if (col.cpr < 0 && header.some(h => h.startsWith("suggested ppc bid")))
+    throw new Error("Это экспорт Xray Keywords. Этапу 4 нужна таблица ключей из Cerebro. Две причины: в Xray Keywords нет колонки CPR, поэтому цену разгона на страницу 1 посчитать нечем; и Keyword Sales там считаются ЗА НЕДЕЛЮ, а этот этап читает их за месяц. Cerebro → Analyze Keywords → экспорт таблицы результатов.");
   const kws = [];
   for (const r of rows.slice(1)){
     const kw = String(r[col.kw]??"").trim();
@@ -1132,17 +1136,23 @@ function renderCerebro(){
   const affordable = candidates.filter(k=>k.push<=maxPush);
   const affordableStrong = affordable.filter(k=>k.status==="green");
   const best = (affordableStrong.length?affordableStrong:affordable.length?affordable:candidates).sort((a,b)=>a.push-b.push)[0] || null;
-  const overall = affordableStrong.length ? "green" : candidates.length ? "yellow" : "red";
+  // "I could not work it out" is not the same answer as "this niche is bad".
+  // Without a CPR anywhere there is no push cost, so there is nothing to judge.
+  const noPush = enriched.filter(k=>k.push==null).length;
+  const canJudge = enriched.some(k=>k.push!=null);
+  const overall = !canJudge ? "yellow"
+                : affordableStrong.length ? "green"
+                : candidates.length ? "yellow" : "red";
   const dot = s => `<span style="background:var(--${s==="green"?"good":s==="yellow"?"warning":"critical"})"></span>`;
   const out = $("#out4");
   out.innerHTML = `<div class="card">
     <h3 class="cardtitle">Проверка ключей</h3>
-    <div class="meta">${g4file} · ${enriched.length} ключей · цена разгона при себестоимости €${landed.toFixed(2)} + €${disc.toFixed(2)} скидка + €${spend.toFixed(0)}/день рекламы × 8 дней</div>
+    <div class="meta">${g4file} · ${enriched.length} ключей${noPush&&canJudge?" ("+noPush+" без CPR — не участвуют в проверке по деньгам)":""} · цена разгона при себестоимости €${landed.toFixed(2)} + €${disc.toFixed(2)} скидка + €${spend.toFixed(0)}/день рекламы × 8 дней</div>
     <div class="tiles">
       ${tile("Продажи по ключам, всего", fmt0(totalSales)+"/мес", "ключи пересекаются — верхняя граница")}
       ${tile("Лучший ключ для запуска", best?best.kw:"—", best?("разгон ≈ €"+fmt0(best.push)):"жизнеспособного кандидата нет")}
-      ${tile("Рекомендуемый P10", fmt0(totalSales*0.04*12), "доля 4% × 12 мес → книга, Лист 6")}
-      ${tile("Рекомендуемый P90", fmt0(totalSales*0.15*12), "доля 15% × 12 мес → книга, Лист 6")}
+      ${tile("Рекомендуемый P10", fmt0(totalSales*0.04*12), "доля 4% × 12 мес, Keyword Sales считаются ЗА МЕСЯЦ")}
+      ${tile("Рекомендуемый P90", fmt0(totalSales*0.15*12), "доля 15% × 12 мес, Keyword Sales считаются ЗА МЕСЯЦ")}
     </div>
     <table class="checks">${enriched.map(k=>`
       <tr><td class="ic">${dot(k.status)}</td>
@@ -1152,12 +1162,13 @@ function renderCerebro(){
           k.td!=null ? (k.td<=5 ? " · TD "+fmt0(k.td)+" — мало оптимизированных заголовков, есть лазейка" : k.td>=30 ? " · TD "+fmt0(k.td)+" — заголовки перенасыщены" : "") : ""}</span></td>
         <td class="val">${k.push==null?"—":"CPR "+fmt0(k.cpr)+" · разгон €"+fmt0(k.push)}</td></tr>`).join("")}
     </table>
-    ${verdictHTML(overall==="green" ? ["good","МОЖНО ЗАПУСКАТЬСЯ","«"+best.kw+"» — плацдарм: реальное покупательское намерение, разгон ≈ €"+fmt0(best.push)+" внутри бюджета. Сначала ранжируйтесь там; большие ключи атакуйте с этой базы. Ключу с флагом хайпа сначала пройти Этап 1 — только потом верьте его объёму."]
+    ${verdictHTML(!canJudge ? ["warning","НЕЧЕМ СУДИТЬ — В ФАЙЛЕ НЕТ CPR","Ни у одного ключа в файле нет CPR, поэтому цену разгона на страницу 1 посчитать не из чего. Это ничего не говорит о нише — это нехватка данных. Выгрузите таблицу ключей из Cerebro, там CPR есть."]
+      : overall==="green" ? ["good","МОЖНО ЗАПУСКАТЬСЯ","«"+best.kw+"» — плацдарм: реальное покупательское намерение, разгон ≈ €"+fmt0(best.push)+" внутри бюджета. Сначала ранжируйтесь там; большие ключи атакуйте с этой базы. Ключу с флагом хайпа сначала пройти Этап 1 — только потом верьте его объёму."]
       : overall==="yellow" ? (affordable.length
         ? ["warning","ПО ДЕНЬГАМ ПРОХОДИТ, НО НАМЕРЕНИЕ СЛАБОЕ","Самая дешёвая дверь — «"+best.kw+"» (разгон ≈ €"+fmt0(best.push)+", внутри бюджета), но её поиски в основном разглядывают витрину ("+fmt0(best.sps)+" на продажу). Ждите более низкий CVR и более долгий разгон, чем обещает цифра. Прежде чем коммититься, поищите дочерний ключ с более сильным намерением."]
         : ["warning","ТОЛЬКО ДОРОГИЕ ДВЕРИ","Жизнеспособные ключи есть, но каждый разгон дороже вашего лимита €"+fmt0(maxPush)+" — поднимайте лимит осознанно или ищите более дешёвый дочерний ключ (длиннее фраза, фильтр Cerebro: CPR ниже 40)."])
       : ["critical","ДВЕРЕЙ С РЕАЛЬНЫМ СПРОСОМ НЕТ","Каждый ключ — либо хайп-всплеск, либо ключ зевак: много поисков, мало покупок. Спрос в нише слабее, чем притворяется её поисковый объём. Перепроверьте Этапом 1, прежде чем тратить что-либо."])}
-    <div class="meta" style="margin-top:10px">Поисков на продажу = поисковый объём ÷ атрибутированные покупки: ≤20 сильный · 20–60 нормальный · 60–120 слабый · >120 зеваки. Тренд ≥+200% = флаг хайпа → проверьте форму Этапом 1. Рекомендованные P10/P90 переносите в Лист 6 книги после сверки с Xray.</div>
+    <div class="meta" style="margin-top:10px">Этот этап читает Keyword Sales как продажи ЗА МЕСЯЦ — так же, как Лист 6 книги. Новый инструмент Helium 10 Xray Keywords считает их ЗА НЕДЕЛЮ; такой файл отклоняется выше, потому что чтение недельных чисел как месячных сделало бы каждый ключ примерно в 4,3 раза лучше, чем он есть. Поисков на продажу = поисковый объём ÷ атрибутированные покупки: ≤20 сильный · 20–60 нормальный · 60–120 слабый · >120 зеваки. Тренд ≥+200% = флаг хайпа → проверьте форму Этапом 1. Рекомендованные P10/P90 переносите в Лист 6 книги после сверки с Xray.</div>
   </div>`;
   funnel.g4 = { best: best ? best.kw : null, push: best ? best.push : null,
                 sps: best ? best.sps : null, totalSales,

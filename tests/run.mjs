@@ -294,6 +294,36 @@ async function runGate5(browser) {
   return data;
 }
 
+// Gate 4 must not turn missing data into a verdict. Three shapes, all real:
+// the Xray Keywords export (no CPR, weekly sales), a keyword table with no CPR
+// column at all, and one where only some rows carry a CPR.
+async function runGate4Missing(browser) {
+  const out = {};
+  for (const [key, file] of [["xrayKeywords", "gate4-xray-keywords.csv"],
+                             ["noCpr", "gate4-no-cpr.csv"],
+                             ["partialCpr", "gate4-partial-cpr.csv"]]) {
+    const page = await browser.newPage();
+    const errs = [];
+    page.on("pageerror", e => errs.push(String(e)));
+    await page.goto(BASE + "/tools/seasonality/", { waitUntil: "domcontentloaded" });
+    await page.setInputFiles("#file4", FIX(file));
+    await page.waitForSelector("#out4 .card, #status4.err");
+    out[key] = await page.evaluate(() => {
+      const txt = el => (el ? el.textContent.trim() : null);
+      return {
+        error: txt(document.querySelector("#status4.err")),
+        verdict: txt(document.querySelector("#out4 .verdict b")),
+        meta: txt(document.querySelector("#out4 .meta")),
+        cls: ["green", "yellow", "red"].find(c => document.querySelector("#gate4").classList.contains(c)) || null,
+        rendered: !!document.querySelector("#out4 .card"),
+      };
+    });
+    out[key].pageErrors = errs.filter(e => !/favicon|ERR_/i.test(e));
+    await page.close();
+  }
+  return out;
+}
+
 const exe = browserPath();
 if (!exe) { console.error("No Chromium/Chrome binary found. Install Chrome, or set one of:\n" + CANDIDATE_BROWSERS.join("\n")); process.exit(2); }
 const browser = await chromium.launch({ executablePath: exe, headless: true });
@@ -303,6 +333,7 @@ const results = {
   ru: await runPage(browser, "/tools/seasonality/ru/", "RU"),
   real: haveReal ? await runRealPage(browser) : null,
   gate5: await runGate5(browser),
+  gate4missing: await runGate4Missing(browser),
 };
 await browser.close();
 server.close();
