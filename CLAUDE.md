@@ -110,10 +110,9 @@ Two deliverables live here:
   B36 is relabelled "per WEEK" with its default changed 190 → 44. The 8-day velocity
   ratio uses the weekly figure directly (×8/7), not a round trip through months.
   Xray Keywords is refused outright: also weekly, and no CPR at all.
-  ASSUMPTION NOT YET CONFIRMED: Search Volume is taken as MONTHLY (Helium 10's usual
-  basis). It is stated on screen. If that tooltip ever says otherwise, searches-per-sale
-  needs no conversion at all — but P10/P90 and the velocity ratio would still be wrong,
-  so they are correct either way.
+  Search Volume is MONTHLY — confirmed by Van from Cerebro's column tooltip on
+  29 Aug 2026, same way as Keyword Sales. So the two figures genuinely are on
+  different periods and the 52/12 conversion is required, not defensive.
 - The searches-per-sale bands (20/60/120) have NEVER been checked against correctly
   scaled data — they were set while the input was 4.3× off. Van's call: re-derive them
   from real exports. Design agreed: breadth, not depth — many different PARENT keywords
