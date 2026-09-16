@@ -307,10 +307,15 @@ def gate3(price=59.99, ref=0.15, fba=4.55, stor=0.62, ret=0.07, retc=0.70,
         d = (1 - ret * retc - tax - t) / 1.19 - ref
         return (fba + stor + landed) / d if d > 0 else None
     max_exw30 = ((payout - tax_cost - 0.30 * net) - prep - frt * (1 + duty)) / (1 + duty)  # C38
+    qty = 300                                               # C44 default
+    import_vat = 0.19 * (exw + frt) * (1 + duty)            # per unit, C49 basis
     return {"net": net, "payout": payout, "landed": landed, "cm": cm,
             "marginPct": cm / net * 100, "beAcosPct": cm / price * 100,
             "maxExw": max_exw, "maxExw30": max_exw30,
-            "p35": need_p(0.35), "p30": need_p(0.30), "cmAfter": cm_after}
+            "p35": need_p(0.35), "p30": need_p(0.30), "cmAfter": cm_after,
+            "orderGoods": exw * qty, "orderLanded": landed * qty,
+            "orderImportVat": import_vat * qty, "orderCm": cm * qty,
+            "orderAfter": cm_after * qty}
 
 
 # ------------------------------------------------------------------ Gate 4

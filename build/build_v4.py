@@ -291,6 +291,16 @@ put(ws, "B38", "Max EXW at 30% (yellow ceiling)", F_BASE)
 frm(ws, "C38", "=((C26+C28-0.3*C21)-C17-C15*(1+C16))/(1+C16)", fmt=EUR)
 note(ws, "B40", "Import VAT (19%) is paid at customs on customs value + duty and is recoverable via your German VAT registration — a cash-flow item (see Sheet 8), not a unit cost.")
 note(ws, "B41", "Cross-check the FBA fee against real dimensions: €4.55 is not a 12 cm box. H10 exports sometimes mislabel inches as cm.")
+put(ws, "B43", "Order totals — quick math (the real order plan lives in Sheets 6 + 8)", F_SECTION, fill=FILL_HDR); put(ws, "C43", "", F_SECTION, fill=FILL_HDR)
+put(ws, "B44", "Sets in this order", F_BASE); inp(ws, "C44", 300, fmt="0")
+put(ws, "B45", "Goods (EXW × sets)", F_BASE); frm(ws, "C45", "=C14*C44", fmt=EUR)
+put(ws, "B46", "   deposit 30% at order", F_BASE); frm(ws, "C46", "=0.3*C45", fmt=EUR)
+put(ws, "B47", "   balance 70% after passed inspection", F_BASE); frm(ws, "C47", "=0.7*C45", fmt=EUR)
+put(ws, "B48", "Landed total (cash into stock)", F_BASE); frm(ws, "C48", "=-C27*C44", fmt=EUR)
+put(ws, "B49", "Import VAT at customs (out, then back)", F_BASE); frm(ws, "C49", "=0.19*(C14+C15)*(1+C16)*C44", fmt=EUR)
+note(ws, "E49", "Paid at Hamburg, recovered through the German VAT return roughly two months later - the cash hole Gate 5 draws.")
+put(ws, "B50", "Contribution if ALL sets sell", F_BOLD); frm(ws, "C50", "=C29*C44", fmt=EUR, font=F_BOLD)
+put(ws, "B51", "   after profit-tax reserve", F_BASE); frm(ws, "C51", "=C35*C44", fmt=EUR)
 
 # =====================================================================
 # 4 SELECTION
@@ -778,4 +788,14 @@ for j in range(12):
 put(ws, "B32", "Lowest cash point (12 quarters)", F_BOLD)
 frm(ws, "C32", "=MIN(C30:N30)", fmt=NUM, font=F_BOLD)
 frm(ws, "B33",
-    '=IF(C32<0,"⚠ The launch schedule outruns the cash. Push a launch quarter later, shrink an order, or add capital — the plan as type
+    '=IF(C32<0,"⚠ The launch schedule outruns the cash. Push a launch quarter later, shrink an order, or add capital — the plan as typed is not funded.",'
+    '"OK — every quarter stays above zero. The lowest point is your true capital requirement buffer.")', font=F_BOLD)
+put(ws, "B34", "Net cash by year", F_BASE)
+frm(ws, "C34", "=SUM(C29:F29)", fmt=NUM); frm(ws, "G34", "=SUM(G29:J29)", fmt=NUM); frm(ws, "K34", "=SUM(K29:N29)", fmt=NUM)
+
+note(ws, "B36", "Ramp: launch quarter sells 40% of the mature rate, the next quarter 70%, mature from the third (change C8). Stock is bought one quarter ahead of sale; the FIRST order of each product sits inside its one-off launch cash, which leaves the quarter before launch.")
+note(ws, "B37", "Structure follows the Freedom Ticket 4-year model (units → cash → minimum-cash, staggered launches); the economics are this file's: German deemed-supplier payouts, CIF duty in landed cost, 1% Georgian turnover tax. No seasonality inside a quarter — quarters smooth it; use Sheet 8 for the monthly view of the current product.")
+note(ws, "B38", "Read C32 with Sheet 8's cash-turns number: at ~2 turns per year, cash committed to product 2's launch is locked for ~6 months — that is why launches cluster cash crises even when every product is individually profitable.")
+
+wb.save(OUT)
+print("saved", OUT)

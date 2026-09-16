@@ -251,8 +251,11 @@
         <label>Prep / labels / inspection (€)<input id="i_prep" type="number" step="0.01" value="0.40"></label>
         <label>Turnover tax % (home country)<input id="i_tax" type="number" step="0.1" value="1"></label>
         <label>Profit tax reserve % (info)<input id="i_ptax" type="number" step="1" value="30"></label>
+        <label>Sets in this order<input id="i_qty" type="number" step="10" value="300"></label>
       </div>
       <div class="tiles" id="g3tiles" style="margin-top:16px"></div>
+      <div class="meta" style="margin-top:12px">Order totals — quick math. The real order plan (optimal size, monthly cash) is Gate 5.</div>
+      <div class="tiles" id="g3order"></div>
       <div id="g3v"></div>
       <div class="meta" style="margin-top:10px">VAT 19% fixed (DE standard rate). Import VAT is a cash-flow item, not a unit cost — plan it in the workbook, Sheet 8. The price-for-35/30, max-EXW-30 and after-reserve tiles are information (workbook Sheet 3 rows 34–38): the 35/30 bands and the verdict are unchanged by them, and the profit-tax reserve is a yearly tax on profit, not a per-unit cost.</div>
     </div>
@@ -1042,7 +1045,7 @@ function calcUnitEcon(touched){
   const price = v("#i_price"), ref = v("#i_ref")/100, fba = v("#i_fba"), stor = v("#i_stor");
   const ret = v("#i_ret")/100, retc = v("#i_retc")/100, exw = v("#i_exw"), frt = v("#i_frt");
   const duty = v("#i_duty")/100, prep = v("#i_prep"), tax = v("#i_tax")/100;
-  const ptax = v("#i_ptax")/100;
+  const ptax = v("#i_ptax")/100, qty = Math.max(0, Math.round(v("#i_qty")));
   const net = price/1.19;
   const referral = ref*price;                        // charged on VAT-inclusive price
   const returns = ret*retc*net;
@@ -1073,6 +1076,13 @@ function calcUnitEcon(touched){
     tile("Price for 35%", p35==null?"—":"€"+p35.toFixed(2), "gross price these costs need (green)") +
     tile("Price for 30%", p30==null?"—":"€"+p30.toFixed(2), "gross price these costs need (yellow)") +
     tile("CM after tax reserve", "€"+cmAfter.toFixed(2), (ptax*100).toFixed(0)+"% yearly profit-tax reserve — info, not a gate");
+  const importVat = 0.19*(exw+frt)*(1+duty);
+  $("#g3order").innerHTML =
+    tile("Order: goods", "€"+fmt0(exw*qty), "deposit €"+fmt0(0.3*exw*qty)+" · balance €"+fmt0(0.7*exw*qty)+" after inspection") +
+    tile("Order: landed total", "€"+fmt0(landed*qty), "cash that becomes stock") +
+    tile("Order: import VAT", "€"+fmt0(importVat*qty), "out at customs, back ≈2 months later") +
+    tile("Order: contribution if all sell", "€"+fmt0(cm*qty), qty+" sets × €"+cm.toFixed(2)) +
+    tile("Order: after tax reserve", "€"+fmt0(cmAfter*qty), "what a fully sold order leaves you");
   let v3;
   if (margin >= 0.35) v3 = ["good","MARGIN OK","≥35% before advertising — there is room for PPC and mistakes. Continue to the workbook: Sheet 4 full checklist, Sheet 6 order size, Sheet 8 cash plan."];
   else if (margin >= 0.30) v3 = ["warning","THIN","30–35%: workable only if the launch goes well. Push the supplier below €"+Math.max(0,maxExw).toFixed(2)+" EXW or raise the price."];

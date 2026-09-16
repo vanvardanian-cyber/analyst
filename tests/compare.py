@@ -129,6 +129,17 @@ eq("G3 price for 35% == workbook C36",   g3["tiles"].get("Price for 35%"),  52.2
 eq("G3 price for 30% == workbook C37",   g3["tiles"].get("Price for 30%"),  46.57, 0.005)
 eq("G3 max EXW 30% == workbook C38",     g3["tiles"].get("Max EXW at 30%"), 15.08, 0.005)
 eq("G3 CM after reserve == workbook C35", g3["tiles"].get("CM after tax reserve"), 14.24, 0.005)
+eq("G3 order goods",       g3["tiles"].get("Order: goods"),        round(m3["orderGoods"]), 1)
+eq("G3 order landed",      g3["tiles"].get("Order: landed total"), round(m3["orderLanded"]), 1)
+eq("G3 order import VAT",  g3["tiles"].get("Order: import VAT"),   round(m3["orderImportVat"]), 1)
+eq("G3 order contribution", g3["tiles"].get("Order: contribution if all sell"), round(m3["orderCm"]), 1)
+eq("G3 order after reserve", g3["tiles"].get("Order: after tax reserve"), round(m3["orderAfter"]), 1)
+# workbook literals (Sheet 3 C45/C48/C49/C50/C51 after Excel recalc)
+eq("G3 order goods == C45",   g3["tiles"].get("Order: goods"), 3000, 1)
+eq("G3 order landed == C48",  g3["tiles"].get("Order: landed total"), 3879, 1)
+eq("G3 order VAT == C49",     g3["tiles"].get("Order: import VAT"), 714, 1)
+eq("G3 order cm == C50",      g3["tiles"].get("Order: contribution if all sell"), 6102, 1)
+eq("G3 order after == C51",   g3["tiles"].get("Order: after tax reserve"), 4271, 1)
 
 # ---- Gate 4
 g4, m4 = en["gate4"], mir["gate4"]

@@ -595,6 +595,20 @@ t('tile("CM after tax reserve", "€"+cmAfter.toFixed(2), (ptax*100).toFixed(0)+
 t('The price-for-35/30, max-EXW-30 and after-reserve tiles are information (workbook Sheet 3 rows 34–38): the 35/30 bands and the verdict are unchanged by them, and the profit-tax reserve is a yearly tax on profit, not a per-unit cost.',
   'Плитки «цена для 35/30», «макс. EXW при 30%» и «после резерва» — справочные (книга, Лист 3, строки 34–38): полосы 35/30 и вердикт они не меняют, а резерв на налог с прибыли — это годовой налог с прибыли, а не затрата на юнит.')
 
+t('Sets in this order<input id="i_qty"', 'Сетов в этом заказе<input id="i_qty"')
+t('<div class="meta" style="margin-top:12px">Order totals — quick math. The real order plan (optimal size, monthly cash) is Gate 5.</div>',
+  '<div class="meta" style="margin-top:12px">Итоги заказа — быстрая арифметика. Настоящий план заказа (оптимальный размер, деньги по месяцам) — Этап 5.</div>')
+t('tile("Order: goods", "€"+fmt0(exw*qty), "deposit €"+fmt0(0.3*exw*qty)+" · balance €"+fmt0(0.7*exw*qty)+" after inspection")',
+  'tile("Заказ: товар", "€"+fmt0(exw*qty), "предоплата €"+fmt0(0.3*exw*qty)+" · остаток €"+fmt0(0.7*exw*qty)+" после инспекции")')
+t('tile("Order: landed total", "€"+fmt0(landed*qty), "cash that becomes stock")',
+  'tile("Заказ: себестоимость итого", "€"+fmt0(landed*qty), "деньги, которые становятся товаром")')
+t('tile("Order: import VAT", "€"+fmt0(importVat*qty), "out at customs, back ≈2 months later")',
+  'tile("Заказ: импортный VAT", "€"+fmt0(importVat*qty), "уходит на таможне, возвращается ≈через 2 месяца")')
+t('tile("Order: contribution if all sell", "€"+fmt0(cm*qty), qty+" sets × €"+cm.toFixed(2))',
+  'tile("Заказ: маржа при полной продаже", "€"+fmt0(cm*qty), qty+" сетов × €"+cm.toFixed(2))')
+t('tile("Order: after tax reserve", "€"+fmt0(cmAfter*qty), "what a fully sold order leaves you")',
+  'tile("Заказ: после резерва на налог", "€"+fmt0(cmAfter*qty), "что оставляет полностью проданный заказ")')
+
 # ---------- apply ----------
 missing = []
 for old, new, n in P:
