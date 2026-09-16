@@ -279,8 +279,18 @@ for r, label, f, fmt, n in calc3:
     if n: note(ws, f"E{r}", n)
 comment(ws, "C31", "Above this ACOS you lose money on every ad-driven unit. The Amazon ads console reports sales INCLUDING VAT, so this divides margin by the gross price — most templates get this wrong by 19%.")
 comment(ws, "C18", "Georgian small-business status taxes turnover at 1%. Base assumed = ex-VAT sales; confirm with your accountant.")
-note(ws, "B35", "Import VAT (19%) is paid at customs on customs value + duty and is recoverable via your German VAT registration — a cash-flow item (see Sheet 8), not a unit cost.")
-note(ws, "B36", "Cross-check the FBA fee against real dimensions: €4.55 is not a 12 cm box. H10 exports sometimes mislabel inches as cm.")
+put(ws, "B34", "Profit tax reserve (info — taxes yearly PROFIT, not the unit; not a gate)", F_BASE); inp(ws, "C34", 0.30, fmt=PCT)
+note(ws, "E34", "Year-end tax on profit (German income tax + trade tax if the business is German-managed; Georgian 1%-regime if the Georgian model holds - ask a Steuerberater). Reserve this share of every euro of contribution; it is not a per-unit cost and does not move the 35/30 bands.")
+put(ws, "B35", "Contribution after tax reserve", F_BASE); frm(ws, "C35", "=C29*(1-C34)", fmt=EUR)
+put(ws, "B36", "Price needed for 35% margin (green)", F_BOLD)
+frm(ws, "C36", '=IFERROR((C10+C11-C27)/((1-C12*C13-C18-0.35)/(1+C7)-IF(C9=1,C8,C8/(1+C7))),"")', fmt=EUR, font=F_BOLD)
+note(ws, "E36", "The inverse of the margin question: at the costs typed above, this gross price reaches 35%. If the market price on page 1 is below this number, the costs are wrong for the niche - not the price.")
+put(ws, "B37", "Price needed for 30% margin (yellow)", F_BASE)
+frm(ws, "C37", '=IFERROR((C10+C11-C27)/((1-C12*C13-C18-0.30)/(1+C7)-IF(C9=1,C8,C8/(1+C7))),"")', fmt=EUR)
+put(ws, "B38", "Max EXW at 30% (yellow ceiling)", F_BASE)
+frm(ws, "C38", "=((C26+C28-0.3*C21)-C17-C15*(1+C16))/(1+C16)", fmt=EUR)
+note(ws, "B40", "Import VAT (19%) is paid at customs on customs value + duty and is recoverable via your German VAT registration — a cash-flow item (see Sheet 8), not a unit cost.")
+note(ws, "B41", "Cross-check the FBA fee against real dimensions: €4.55 is not a 12 cm box. H10 exports sometimes mislabel inches as cm.")
 
 # =====================================================================
 # 4 SELECTION
@@ -768,14 +778,4 @@ for j in range(12):
 put(ws, "B32", "Lowest cash point (12 quarters)", F_BOLD)
 frm(ws, "C32", "=MIN(C30:N30)", fmt=NUM, font=F_BOLD)
 frm(ws, "B33",
-    '=IF(C32<0,"⚠ The launch schedule outruns the cash. Push a launch quarter later, shrink an order, or add capital — the plan as typed is not funded.",'
-    '"OK — every quarter stays above zero. The lowest point is your true capital requirement buffer.")', font=F_BOLD)
-put(ws, "B34", "Net cash by year", F_BASE)
-frm(ws, "C34", "=SUM(C29:F29)", fmt=NUM); frm(ws, "G34", "=SUM(G29:J29)", fmt=NUM); frm(ws, "K34", "=SUM(K29:N29)", fmt=NUM)
-
-note(ws, "B36", "Ramp: launch quarter sells 40% of the mature rate, the next quarter 70%, mature from the third (change C8). Stock is bought one quarter ahead of sale; the FIRST order of each product sits inside its one-off launch cash, which leaves the quarter before launch.")
-note(ws, "B37", "Structure follows the Freedom Ticket 4-year model (units → cash → minimum-cash, staggered launches); the economics are this file's: German deemed-supplier payouts, CIF duty in landed cost, 1% Georgian turnover tax. No seasonality inside a quarter — quarters smooth it; use Sheet 8 for the monthly view of the current product.")
-note(ws, "B38", "Read C32 with Sheet 8's cash-turns number: at ~2 turns per year, cash committed to product 2's launch is locked for ~6 months — that is why launches cluster cash crises even when every product is individually profitable.")
-
-wb.save(OUT)
-print("saved", OUT)
+    '=IF(C32<0,"⚠ The launch schedule outruns the cash. Push a launch quarter later, shrink an order, or add capital — the plan as type

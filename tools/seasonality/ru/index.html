@@ -250,10 +250,11 @@
         <label>Импортная пошлина % (на CIF)<input id="i_duty" type="number" step="0.1" value="2.7"></label>
         <label>Преп / этикетки / инспекция (€)<input id="i_prep" type="number" step="0.01" value="0.40"></label>
         <label>Налог с оборота % (своя страна)<input id="i_tax" type="number" step="0.1" value="1"></label>
+        <label>Резерв на налог с прибыли % (справочно)<input id="i_ptax" type="number" step="1" value="30"></label>
       </div>
       <div class="tiles" id="g3tiles" style="margin-top:16px"></div>
       <div id="g3v"></div>
-      <div class="meta" style="margin-top:10px">VAT 19% фиксирован (стандартная ставка DE). Импортный VAT — статья кэш-флоу, а не юнит-кост: планируйте его в книге, Лист 8.</div>
+      <div class="meta" style="margin-top:10px">VAT 19% фиксирован (стандартная ставка DE). Импортный VAT — статья кэш-флоу, а не юнит-кост: планируйте его в книге, Лист 8. Плитки «цена для 35/30», «макс. EXW при 30%» и «после резерва» — справочные (книга, Лист 3, строки 34–38): полосы 35/30 и вердикт они не меняют, а резерв на налог с прибыли — это годовой налог с прибыли, а не затрата на юнит.</div>
     </div>
     <div class="nexthint" id="hint3"></div>
   </section>
@@ -1041,6 +1042,7 @@ function calcUnitEcon(touched){
   const price = v("#i_price"), ref = v("#i_ref")/100, fba = v("#i_fba"), stor = v("#i_stor");
   const ret = v("#i_ret")/100, retc = v("#i_retc")/100, exw = v("#i_exw"), frt = v("#i_frt");
   const duty = v("#i_duty")/100, prep = v("#i_prep"), tax = v("#i_tax")/100;
+  const ptax = v("#i_ptax")/100;
   const net = price/1.19;
   const referral = ref*price;                        // charged on VAT-inclusive price
   const returns = ret*retc*net;
@@ -1054,6 +1056,11 @@ function calcUnitEcon(touched){
   const beAcos = price>0 ? cm/price : 0;             // console measures VAT-incl sales
   const maxLanded = payout - taxCost - 0.35*net;
   const maxExw = (maxLanded - prep - frt*(1+duty))/(1+duty);
+  const maxExw30 = ((payout - taxCost - 0.30*net) - prep - frt*(1+duty))/(1+duty);
+  // the inverse question: which gross price reaches the band at THESE costs
+  const needP = t => { const d = (1 - ret*retc - tax - t)/1.19 - ref; return d > 0 ? (fba + stor + landed)/d : null; };
+  const p35 = needP(0.35), p30 = needP(0.30);
+  const cmAfter = cm*(1-ptax);          // info only: yearly profit tax, reserved per euro
   $("#g3tiles").innerHTML =
     tile("Нетто-выручка", "€"+net.toFixed(2), "цена ÷ 1,19 (без VAT)") +
     tile("Выплата Amazon за юнит", "€"+payout.toFixed(2), "после комиссии, FBA, хранения, возвратов") +
@@ -1061,13 +1068,17 @@ function calcUnitEcon(touched){
     tile("Маржинальный доход", "€"+cm.toFixed(2), "за юнит, до рекламы") +
     tile("Маржа % от нетто", (margin*100).toFixed(1)+"%", "ворота: ≥35% до рекламы") +
     tile("Порог ACOS", (beAcos*100).toFixed(1)+"%", "CM ÷ БРУТТО-цена (база консоли)") +
-    tile("Макс. EXW при 35%", "€"+maxExw.toFixed(2), "ваш потолок для котировок поставщика");
+    tile("Макс. EXW при 35%", "€"+maxExw.toFixed(2), "ваш потолок для котировок поставщика") +
+    tile("Макс. EXW при 30%", "€"+maxExw30.toFixed(2), "жёлтый потолок") +
+    tile("Цена для 35%", p35==null?"—":"€"+p35.toFixed(2), "нужная брутто-цена при этих затратах (зелёный)") +
+    tile("Цена для 30%", p30==null?"—":"€"+p30.toFixed(2), "нужная брутто-цена при этих затратах (жёлтый)") +
+    tile("Маржа после резерва", "€"+cmAfter.toFixed(2), (ptax*100).toFixed(0)+"% годовой резерв на налог с прибыли — справочно, не ворота");
   let v3;
   if (margin >= 0.35) v3 = ["good","МАРЖА ОК","≥35% до рекламы — есть запас на PPC и ошибки. Дальше в книгу: Лист 4 полный чек-лист, Лист 6 размер заказа, Лист 8 кэш-план."];
   else if (margin >= 0.30) v3 = ["warning","ТОНКО","30–35%: сработает только при удачном запуске. Продавите поставщика ниже €"+Math.max(0,maxExw).toFixed(2)+" EXW или поднимите цену."];
   else v3 = ["critical","МАРЖИ НЕ ХВАТАЕТ","Ниже 30% до рекламы нет места ни для PPC, ни для всплесков возвратов, ни для роста комиссий. Меняйте цену, поставщика или товар."];
   $("#g3v").innerHTML = verdictHTML(v3);
-  funnel.g3 = { price, net, payout, landed, cm, margin, beAcos, maxExw };
+  funnel.g3 = { price, net, payout, landed, cm, margin, beAcos, maxExw, maxExw30, p35, p30, cmAfter };
   if (touched) setGate(3, v3[0]==="good" ? "green" : v3[0]==="warning" ? "yellow" : "red");
   calcGate5();                       // Cu, landed and payout all feed Gate 5
 }

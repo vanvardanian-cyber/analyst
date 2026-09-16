@@ -119,6 +119,16 @@ eq("G3 contribution margin", g3["tiles"].get("Contribution margin"), round(m3["c
 eq("G3 margin %",           g3["tiles"].get("Margin % of net"),     round(m3["marginPct"], 1), 0.05)
 eq("G3 breakeven ACOS %",   g3["tiles"].get("Breakeven ACOS"),      round(m3["beAcosPct"], 1), 0.05)
 eq("G3 max EXW",            g3["tiles"].get("Max EXW at 35%"),      round(m3["maxExw"], 2))
+eq("G3 max EXW at 30%",     g3["tiles"].get("Max EXW at 30%"),      round(m3["maxExw30"], 2))
+eq("G3 price for 35%",      g3["tiles"].get("Price for 35%"),       round(m3["p35"], 2))
+eq("G3 price for 30%",      g3["tiles"].get("Price for 30%"),       round(m3["p30"], 2))
+eq("G3 CM after reserve",   g3["tiles"].get("CM after tax reserve"), round(m3["cmAfter"], 2))
+# literals, worked out by hand from the default inputs - pins page AND mirror to
+# the workbook's own recalculated cells (Sheet 3 C35-C38 after the Excel recalc)
+eq("G3 price for 35% == workbook C36",   g3["tiles"].get("Price for 35%"),  52.21, 0.005)
+eq("G3 price for 30% == workbook C37",   g3["tiles"].get("Price for 30%"),  46.57, 0.005)
+eq("G3 max EXW 30% == workbook C38",     g3["tiles"].get("Max EXW at 30%"), 15.08, 0.005)
+eq("G3 CM after reserve == workbook C35", g3["tiles"].get("CM after tax reserve"), 14.24, 0.005)
 
 # ---- Gate 4
 g4, m4 = en["gate4"], mir["gate4"]
@@ -265,14 +275,24 @@ if not ok:
 
 if page.get("real") and mir.get("real"):
     R, mR = page["real"], mir["real"]
-    same("REAL G1 keeps the leftover months as a part-year block", mR["gate1"]["blocks"], 3)
-    same("REAL G1 part-year is 11 months",   mR["gate1"]["partialMonths"], 11)
-    same("REAL G1 only two whole years",     mR["gate1"]["fullBlocks"], 2)
-    same("REAL G1 no prior-year YoY off a part-year", mR["gate1"]["yoyPrev"], None)
-    ok = "part-year of 11 months" in (R["g1meta"] or "")
-    checks.append((ok, "REAL G1 card says the block is a part-year", R["g1meta"], "says part-year of 11 months"))
-    if not ok:
-        fails.append("REAL G1 card does not disclose the part-year block")
+    # Whether the fixture yields a part-year block depends on TODAY (the current
+    # month is dropped), so the expectation is computed, not hard-coded. In a month
+    # where the export's last month is complete, three full blocks and a prior-year
+    # YoY are the correct behaviour.
+    pm = mR["gate1"]["partialMonths"]
+    same("REAL G1 blocks = full + (1 if part-year else 0)",
+         mR["gate1"]["blocks"], mR["gate1"]["fullBlocks"] + (1 if pm else 0))
+    if pm:
+        same("REAL G1 no prior-year YoY off a part-year", mR["gate1"]["yoyPrev"], None)
+        ok = f"part-year of {pm} months" in (R["g1meta"] or "")
+        checks.append((ok, "REAL G1 card says the block is a part-year", R["g1meta"], f"says part-year of {pm} months"))
+        if not ok:
+            fails.append("REAL G1 card does not disclose the part-year block")
+    else:
+        ok = "part-year" not in (R["g1meta"] or "")
+        checks.append((ok, "REAL G1 card claims no part-year when all blocks are full", R["g1meta"], "no part-year text"))
+        if not ok:
+            fails.append("REAL G1 card claims a part-year that does not exist")
     # a generic export header must not become the dossier's keyword name
     ok = R["g1title"] not in ("Search Volume", "Volume", "SV")
     checks.append((ok, "REAL G1 title is not the generic column header", R["g1title"], "not 'Search Volume'"))

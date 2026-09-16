@@ -583,6 +583,18 @@ t('["warning","CANNOT JUDGE — NO CPR IN THIS FILE","Not one keyword in this fi
 t('Cerebro counts Keyword Sales per WEEK (hover the column header — it says so), so this gate multiplies them by 52/12 before comparing them with Search Volume, which is MONTHLY — both confirmed from Cerebro\'s own column tooltips. Workbook Sheet 6 C40/C41 does the same. Until 29 Aug 2026 both read the weekly figure as monthly, which made every keyword look about 4.3× worse than it is and shrank the suggested order by the same factor. The Xray Keywords export is refused above: it is also weekly and has no CPR at all. ',
   'Cerebro считает Keyword Sales ЗА НЕДЕЛЮ (наведите курсор на заголовок колонки — там так и написано), поэтому этап умножает их на 52/12, прежде чем сравнивать с Search Volume, который считается ЗА МЕСЯЦ — оба факта подтверждены подсказками самих колонок Cerebro. Лист 6 книги, C40/C41, делает то же самое. До 29 августа 2026 оба читали недельное число как месячное: из-за этого каждый ключ выглядел примерно в 4,3 раза хуже, чем он есть, а рекомендуемый заказ был во столько же раз меньше. Экспорт Xray Keywords отклоняется выше: он тоже недельный и вообще без CPR. ')
 
+t('Profit tax reserve % (info)', 'Резерв на налог с прибыли % (справочно)')
+t('tile("Max EXW at 30%", "€"+maxExw30.toFixed(2), "the yellow ceiling")',
+  'tile("Макс. EXW при 30%", "€"+maxExw30.toFixed(2), "жёлтый потолок")')
+t('tile("Price for 35%", p35==null?"—":"€"+p35.toFixed(2), "gross price these costs need (green)")',
+  'tile("Цена для 35%", p35==null?"—":"€"+p35.toFixed(2), "нужная брутто-цена при этих затратах (зелёный)")')
+t('tile("Price for 30%", p30==null?"—":"€"+p30.toFixed(2), "gross price these costs need (yellow)")',
+  'tile("Цена для 30%", p30==null?"—":"€"+p30.toFixed(2), "нужная брутто-цена при этих затратах (жёлтый)")')
+t('tile("CM after tax reserve", "€"+cmAfter.toFixed(2), (ptax*100).toFixed(0)+"% yearly profit-tax reserve — info, not a gate")',
+  'tile("Маржа после резерва", "€"+cmAfter.toFixed(2), (ptax*100).toFixed(0)+"% годовой резерв на налог с прибыли — справочно, не ворота")')
+t('The price-for-35/30, max-EXW-30 and after-reserve tiles are information (workbook Sheet 3 rows 34–38): the 35/30 bands and the verdict are unchanged by them, and the profit-tax reserve is a yearly tax on profit, not a per-unit cost.',
+  'Плитки «цена для 35/30», «макс. EXW при 30%» и «после резерва» — справочные (книга, Лист 3, строки 34–38): полосы 35/30 и вердикт они не меняют, а резерв на налог с прибыли — это годовой налог с прибыли, а не затрата на юнит.')
+
 # ---------- apply ----------
 missing = []
 for old, new, n in P:

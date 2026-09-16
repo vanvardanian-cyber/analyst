@@ -250,10 +250,11 @@
         <label>Import duty % (on CIF)<input id="i_duty" type="number" step="0.1" value="2.7"></label>
         <label>Prep / labels / inspection (€)<input id="i_prep" type="number" step="0.01" value="0.40"></label>
         <label>Turnover tax % (home country)<input id="i_tax" type="number" step="0.1" value="1"></label>
+        <label>Profit tax reserve % (info)<input id="i_ptax" type="number" step="1" value="30"></label>
       </div>
       <div class="tiles" id="g3tiles" style="margin-top:16px"></div>
       <div id="g3v"></div>
-      <div class="meta" style="margin-top:10px">VAT 19% fixed (DE standard rate). Import VAT is a cash-flow item, not a unit cost — plan it in the workbook, Sheet 8.</div>
+      <div class="meta" style="margin-top:10px">VAT 19% fixed (DE standard rate). Import VAT is a cash-flow item, not a unit cost — plan it in the workbook, Sheet 8. The price-for-35/30, max-EXW-30 and after-reserve tiles are information (workbook Sheet 3 rows 34–38): the 35/30 bands and the verdict are unchanged by them, and the profit-tax reserve is a yearly tax on profit, not a per-unit cost.</div>
     </div>
     <div class="nexthint" id="hint3"></div>
   </section>
@@ -1041,6 +1042,7 @@ function calcUnitEcon(touched){
   const price = v("#i_price"), ref = v("#i_ref")/100, fba = v("#i_fba"), stor = v("#i_stor");
   const ret = v("#i_ret")/100, retc = v("#i_retc")/100, exw = v("#i_exw"), frt = v("#i_frt");
   const duty = v("#i_duty")/100, prep = v("#i_prep"), tax = v("#i_tax")/100;
+  const ptax = v("#i_ptax")/100;
   const net = price/1.19;
   const referral = ref*price;                        // charged on VAT-inclusive price
   const returns = ret*retc*net;
@@ -1054,6 +1056,11 @@ function calcUnitEcon(touched){
   const beAcos = price>0 ? cm/price : 0;             // console measures VAT-incl sales
   const maxLanded = payout - taxCost - 0.35*net;
   const maxExw = (maxLanded - prep - frt*(1+duty))/(1+duty);
+  const maxExw30 = ((payout - taxCost - 0.30*net) - prep - frt*(1+duty))/(1+duty);
+  // the inverse question: which gross price reaches the band at THESE costs
+  const needP = t => { const d = (1 - ret*retc - tax - t)/1.19 - ref; return d > 0 ? (fba + stor + landed)/d : null; };
+  const p35 = needP(0.35), p30 = needP(0.30);
+  const cmAfter = cm*(1-ptax);          // info only: yearly profit tax, reserved per euro
   $("#g3tiles").innerHTML =
     tile("Net revenue", "€"+net.toFixed(2), "price ÷ 1.19 (VAT out)") +
     tile("Amazon payout / unit", "€"+payout.toFixed(2), "after referral, FBA, storage, returns") +
@@ -1061,13 +1068,17 @@ function calcUnitEcon(touched){
     tile("Contribution margin", "€"+cm.toFixed(2), "per unit, before ads") +
     tile("Margin % of net", (margin*100).toFixed(1)+"%", "gate: ≥35% before ads") +
     tile("Breakeven ACOS", (beAcos*100).toFixed(1)+"%", "CM ÷ GROSS price (console basis)") +
-    tile("Max EXW at 35%", "€"+maxExw.toFixed(2), "your ceiling for supplier quotes");
+    tile("Max EXW at 35%", "€"+maxExw.toFixed(2), "your ceiling for supplier quotes") +
+    tile("Max EXW at 30%", "€"+maxExw30.toFixed(2), "the yellow ceiling") +
+    tile("Price for 35%", p35==null?"—":"€"+p35.toFixed(2), "gross price these costs need (green)") +
+    tile("Price for 30%", p30==null?"—":"€"+p30.toFixed(2), "gross price these costs need (yellow)") +
+    tile("CM after tax reserve", "€"+cmAfter.toFixed(2), (ptax*100).toFixed(0)+"% yearly profit-tax reserve — info, not a gate");
   let v3;
   if (margin >= 0.35) v3 = ["good","MARGIN OK","≥35% before advertising — there is room for PPC and mistakes. Continue to the workbook: Sheet 4 full checklist, Sheet 6 order size, Sheet 8 cash plan."];
   else if (margin >= 0.30) v3 = ["warning","THIN","30–35%: workable only if the launch goes well. Push the supplier below €"+Math.max(0,maxExw).toFixed(2)+" EXW or raise the price."];
   else v3 = ["critical","NOT ENOUGH MARGIN","Below 30% before ads there is no room for PPC, returns spikes, or fee increases. Change the price point, the supplier, or the product."];
   $("#g3v").innerHTML = verdictHTML(v3);
-  funnel.g3 = { price, net, payout, landed, cm, margin, beAcos, maxExw };
+  funnel.g3 = { price, net, payout, landed, cm, margin, beAcos, maxExw, maxExw30, p35, p30, cmAfter };
   if (touched) setGate(3, v3[0]==="good" ? "green" : v3[0]==="warning" ? "yellow" : "red");
   calcGate5();                       // Cu, landed and payout all feed Gate 5
 }

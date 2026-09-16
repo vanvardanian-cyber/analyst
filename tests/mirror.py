@@ -300,9 +300,17 @@ def gate3(price=59.99, ref=0.15, fba=4.55, stor=0.62, ret=0.07, retc=0.70,
     cm = payout - landed - tax_cost                         # C29
     max_landed = payout + (-tax_cost) - 0.35 * net          # C32
     max_exw = (max_landed - prep - frt * (1 + duty)) / (1 + duty)   # C33
+    # info rows 34-38: after-reserve contribution, needed prices, yellow ceiling
+    ptax = 0.30                                             # C34 default
+    cm_after = cm * (1 - ptax)                              # C35
+    def need_p(t):                                          # C36/C37
+        d = (1 - ret * retc - tax - t) / 1.19 - ref
+        return (fba + stor + landed) / d if d > 0 else None
+    max_exw30 = ((payout - tax_cost - 0.30 * net) - prep - frt * (1 + duty)) / (1 + duty)  # C38
     return {"net": net, "payout": payout, "landed": landed, "cm": cm,
             "marginPct": cm / net * 100, "beAcosPct": cm / price * 100,
-            "maxExw": max_exw}
+            "maxExw": max_exw, "maxExw30": max_exw30,
+            "p35": need_p(0.35), "p30": need_p(0.30), "cmAfter": cm_after}
 
 
 # ------------------------------------------------------------------ Gate 4
