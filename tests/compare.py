@@ -417,6 +417,33 @@ if "3 without CPR" not in (pc["meta"] or ""):
 for k, v in M.items():
     same(f"G4 {k}: no JS errors", v["pageErrors"], [])
 
+# ---- Gate 1 quarter shares: display arithmetic, page vs mirror, plus sum==100
+def qstr(qs):
+    return " · ".join(f"{q*100:.0f}" for q in qs) + "%"
+same("G1 quarter-shares tile", page["en"]["gate1"]["tiles"].get("Quarter shares"),
+     qstr(mir["gate1"]["quarters"]))
+qsum = sum(mir["gate1"]["quarters"]) * 100
+checks.append((abs(qsum-100) < 0.01, "G1 quarter shares sum to 100%", round(qsum,3), 100))
+if abs(qsum-100) >= 0.01:
+    fails.append("G1 quarter shares do not sum to 100%")
+if page.get("real") and mir.get("real"):
+    same("REAL G1 quarter-shares tile", page["real"]["g1tiles"].get("Quarter shares"),
+         qstr(mir["real"]["gate1"]["quarters"]))
+
+# ---- Gate 4 ABA columns: info chips, verdict untouched
+A, mA = page["gate4aba"], mir["gate4aba"]
+same("G4aba no JS errors", A["pageErrors"], [])
+same("G4aba openings tile", A["tiles"].get("ABA openings"), str(mA["openings"]))
+row = {r["kw"]: r["note"] for r in A["rows"] if r["kw"]}
+checks.append(("LOSE the sale (opening)" in row.get("form glas",""),
+               "G4aba flags the kill-story row as an opening", row.get("form glas","")[-80:], "opening flagged"))
+if "LOSE the sale (opening)" not in row.get("form glas",""):
+    fails.append("G4aba does not flag the opening row")
+same("G4aba small-gap row NOT flagged", "opening" in row.get("form mit deckel",""), False)
+same("G4aba core keyword marked", "core of the compared set" in row.get("form mit deckel",""), True)
+same("G4aba row without ABA data stays clean", "ABA clicks" in row.get("form keramik",""), False)
+same("G4aba low-click gap NOT an opening", "opening" in row.get("form klein",""), False)
+
 # ---- no JS errors on either page
 same("EN page: no JS errors", en["consoleErrors"], [])
 same("RU page: no JS errors", ru["consoleErrors"], [])

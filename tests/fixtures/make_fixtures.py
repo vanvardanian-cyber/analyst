@@ -123,8 +123,24 @@ def write(name, rows):
         csv.writer(f).writerows(rows)
     print("wrote", name, "(%d rows)" % (len(rows) - 1))
 
+def gate4_aba():
+    """Cerebro export WITH the ABA and competitor columns (multi-ASIN search)."""
+    return [["Keyword Phrase","ABA Total Click Share","ABA Total Conv. Share","Keyword Sales",
+             "Search Volume","Search Volume Trend","Competing Products","CPR","Title Density",
+             "Ranking Competitors (count)","Competitor Performance Score"],
+            # opening: 26.7 clicks vs 11.5 buys = gap +15.2 (the auflaufform-glas kill-story)
+            ["form glas",  "26.7","11.5", 26, 2065, 12, ">526", 27, 1, 2, 0.8],
+            # defended: conversion above clicks
+            ["form mit deckel","30.9","32.5",114, 6396, 28, ">1,000",36,12, 5, 6.0],
+            # no ABA data on this row
+            ["form keramik","","",       23, 1529, 44, ">699", 28, 7, 1, 1.6],
+            # gap positive but clicks under 15 - NOT an opening
+            ["form klein", "12.0","1.0",  45, 2741, 12, ">1,000",35, 8, 0, 0.0]]
+
+
 if __name__ == "__main__":
     write("gate1-search-volume.csv", gate1())
     write("gate1-seasonal.csv", gate1_seasonal())
     write("gate2-xray.csv", gate2())
     write("gate4-cerebro.csv", gate4())
+    write("gate4-aba.csv", gate4_aba())

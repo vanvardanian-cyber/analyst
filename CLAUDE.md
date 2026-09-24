@@ -125,6 +125,14 @@ Two deliverables live here:
   had no CPR. Missing data now reads "CANNOT JUDGE", and a file with only some CPRs is
   judged on those rows while the meta line names how many were left out.
 
+- Gate 1 shows quarter shares (Q1-Q4 of yearly demand) - display arithmetic over the
+  monthly profile, only when all 12 calendar months are covered. No new threshold.
+- Gate 4 reads the ABA + competitor columns when a multi-ASIN Cerebro export carries
+  them, as INFO chips the verdict never reads: top-3 click share vs conversion share
+  (gap >= 10 points at >= 15% clicks = "opening" - kill-story: auflaufform glas,
+  +15.2 points, 2026-09-05) and Competitor Performance Score (>= 5 = core keyword of
+  the COMPARED ASIN SET; the score is relative to the entered ASINs, not the market).
+
 ## Backlog (agreed priority order)
 1. ~~**Gate 0**~~ — done. See the gate logic section above.
 2. ~~**Dossier**~~ — done. Sheet 5 rows 21–34 unchanged (weights, bands, ≥70/50–69/<50,

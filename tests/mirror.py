@@ -207,7 +207,13 @@ def gate1(fixture="gate1-search-volume.csv", now=None):
             ramp = i
             break
 
-    return {"monthsUsed": len(months), "blocks": len(blocks), "amplitude": amp,
+    quarters = None
+    if sum(1 for v in prof_avg if v is not None) == 12:
+        tot = sum(prof_avg)
+        quarters = [sum(prof_avg[i] for i in mm)/tot
+                    for mm in ([0,1,2],[3,4,5],[6,7,8],[9,10,11])]
+    return {"quarters": quarters,
+            "monthsUsed": len(months), "blocks": len(blocks), "amplitude": amp,
             "partialMonths": next((len(b["seg"]) for b in blocks if b["partial"]), None),
             "fullBlocks": len(full), "yoyPrev": yoy_prev,
             "consistency": consistency, "strength": strength, "top4": top4,
@@ -473,6 +479,21 @@ G5_SHEET6 = dict(p10=600, p90=1400, salvage=5, holding=1, moq=300, po_budget=500
                  start_cash=6500, deposit=0.30, bal_month=2, arrive=3, vat_lag=2,
                  launch_ads=700, ads_per_unit=3, fixed=133)
 
+def gate4_aba():
+    rows = read_csv("gate4-aba.csv")
+    h = [c.strip().lower() for c in rows[0]]
+    ic, iv = h.index("aba total click share"), h.index("aba total conv. share")
+    out = []
+    for r in rows[1:]:
+        click = float(r[ic]) if r[ic].strip() else None
+        conv = float(r[iv]) if r[iv].strip() else None
+        gap = click - conv if click is not None and conv is not None else None
+        out.append({"kw": r[0], "gap": gap,
+                    "open": gap is not None and gap >= 10 and click >= 15,
+                    "defended": gap is not None and gap <= -3})
+    return {"rows": out, "openings": sum(1 for k in out if k["open"])}
+
+
 REAL = {"gate1": "real-gate1-chart.csv", "gate2": "real-gate2-xray.csv"}
 
 
@@ -495,7 +516,8 @@ if __name__ == "__main__":
         real["gate1"] = gate1(REAL["gate1"])
     if "gate2" in have:
         real["gate2"] = gate2(REAL["gate2"])
-    res = {"gate5": gate5(**G5_SHEET6),
+    res = {"gate4aba": gate4_aba(),
+           "gate5": gate5(**G5_SHEET6),
            "real": real,
            "gate0": {k: gate0(v) for k, v in G0_SCENARIOS.items()},
            "gate1": g1, "gate1seasonal": g1s, "gate2": g2, "gate3": g3, "gate4": gate4(),

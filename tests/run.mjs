@@ -324,6 +324,31 @@ async function runGate4Missing(browser) {
   return out;
 }
 
+// Gate 4 with the ABA + competitor columns present (multi-ASIN Cerebro export)
+async function runGate4Aba(browser) {
+  const page = await browser.newPage();
+  const errs = [];
+  page.on("pageerror", e => errs.push(String(e)));
+  await page.goto(BASE + "/tools/seasonality/", { waitUntil: "domcontentloaded" });
+  await page.setInputFiles("#file4", FIX("gate4-aba.csv"));
+  await page.waitForSelector("#out4 .card, #status4.err");
+  const data = await page.evaluate(() => {
+    const txt = el => (el ? el.textContent.trim() : null);
+    return {
+      error: txt(document.querySelector("#status4.err")),
+      tiles: Object.fromEntries([...document.querySelectorAll("#out4 .tile")]
+        .map(t => [t.querySelector(".k").textContent.trim(), t.querySelector(".v").textContent.trim()])),
+      rows: [...document.querySelectorAll("#out4 table.checks tr")].map(tr => ({
+        kw: txt(tr.querySelector("td:nth-child(2) b")),
+        note: (txt(tr.querySelector("td:nth-child(2)")) || "").replace(/\s+/g, " "),
+      })),
+    };
+  });
+  data.pageErrors = errs.filter(e => !/favicon|ERR_/i.test(e));
+  await page.close();
+  return data;
+}
+
 const exe = browserPath();
 if (!exe) { console.error("No Chromium/Chrome binary found. Install Chrome, or set one of:\n" + CANDIDATE_BROWSERS.join("\n")); process.exit(2); }
 const browser = await chromium.launch({ executablePath: exe, headless: true });
@@ -334,6 +359,7 @@ const results = {
   real: haveReal ? await runRealPage(browser) : null,
   gate5: await runGate5(browser),
   gate4missing: await runGate4Missing(browser),
+  gate4aba: await runGate4Aba(browser),
 };
 await browser.close();
 server.close();

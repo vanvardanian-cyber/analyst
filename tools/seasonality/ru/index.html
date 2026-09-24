@@ -363,6 +363,7 @@
     </ol>
     <b>Пороги Этапа 0:</b> девять строк — это дословно Блок A Листа 4 книги, где любое НЕТ означает автоматический отказ. Эта страница их разделяет: семь строк о свойствах продукта остаются красным приговором, а две строки об обязанностях продавца (Ответственное лицо в ЕС по GPSR, упаковочный EPR через LUCID + уполномоченного представителя PPWR) показываются жёлтым. Причина: эти две — обязанности уровня продавца, привязанные к любому потребительскому товару, поэтому как фильтр ниш они отклонили бы все ниши одинаково — информации об этой нише в них нет. В подсчёте Блока A они по-прежнему считаются как НЕТ, и этот подсчёт печатается рядом с вердиктом без изменений. Вопроса про бренд в книге нет.<br>
     <b>Gate 5 thresholds:</b> order size is workbook Sheet 6 unchanged — σ = (P90−P10)/2.5631, C<sub>o</sub> = landed + extra storage − recovery, service level C<sub>u</sub>/(C<sub>u</sub>+C<sub>o</sub>), optimum clamped to MOQ and budget. Red is Sheet 8's only verdict: the cumulative cash line goes below zero. Yellow is Sheet 6's own two warnings — MOQ more than 20% above the optimum, or budget buying under 80% of it. No band here is new. Two things the page does that the workbook asks you to do by hand: it phases the monthly units on the Gate 1 seasonal index instead of a typed shape, and it refuses to plan more sales than the one order buys — where the workbook's example books 800 units of sales against a 386-unit order, this page stops at the order and tells you the stock-out month. The reorder is still not modelled (Sheet 8 note), so a stock-out warning means real cash-out is higher than the line shows. Excel's NORMINV/NORMDIST have no JavaScript equivalent: the inverse normal is Acklam's approximation (relative error &lt; 1.15e-9), the CDF a Chebyshev erfc.<br>
+    <b>Доли кварталов (Этап 1) и колонки ABA (Этап 4):</b> плитка долей кварталов — это месячный профиль, сложенный по календарным кварталам: чистая арифметика, без новых порогов. Если экспорт Cerebro содержит колонки Amazon Brand Analytics, Этап 4 печатает их по каждому ключу: доля кликов против доли покупок у топ-3 (разрыв ≥10 пунктов при кликах ≥15% помечается как лазейка — верхние листинги собирают клики, но теряют продажу; kill-story: «auflaufform glas», +15,2 пункта, найдено 05.09.2026) и Competitor Performance Score введённых в поиск ASIN (≥5 = ключ из ядра этого набора; счёт относителен к этим ASIN, а не к рынку). Всё это — справочная информация; вердикты её не читают.<br>
     <b>Метод и пороги:</b> классическая мультипликативная декомпозиция, сезонная сила и согласованность лет — по Hyndman &amp; Athanasopoulos (otexts.com/fpp3); ворота отбора повторяют книгу EaseStore (выручка страницы, стена отзывов, присутствие Amazon, доля CN/HK, свежие входы); ценовой коридор и порог маржи — по распространённым практическим бенчмаркам (Freedom Ticket), ужесточённым под немецкую реальность с VAT. Месяцы «стены отзывов» считаются при 300 юнитах/мес и 1,5% отзывов. Все пороги задокументированы, скрытых нет. Учебный инструмент, не финансовая консультация. © EaseStore 2026
   </footer>
 </div>
@@ -687,7 +688,13 @@ function computeStats(name, months){
   }
   const peak = index.indexOf(Math.max(...index.map(v=>v??-1)));
   const low  = index.indexOf(Math.min(...index.map(v=>v??1e9)));
-  return { name, months, blocks, index, profAvg, amp, top4, yoy, yoyPrev, consistency, strength, ramp, peak, low,
+  // quarter shares of the yearly demand - the numbers a cash plan asks for
+  let quarters = null;
+  if (filled.length === 12){
+    const tot = profAvg.reduce((a,b)=>a+b,0);
+    quarters = [[0,1,2],[3,4,5],[6,7,8],[9,10,11]].map(q => q.reduce((a,i)=>a+profAvg[i],0)/tot);
+  }
+  return { name, months, blocks, index, profAvg, amp, top4, yoy, yoyPrev, consistency, strength, ramp, peak, low, quarters,
            calMonths: filled.length, zeroMonths: filled.filter(v=>v===0).length };
 }
 function reliabilityVerdict(r){
@@ -786,6 +793,7 @@ function render(results){
         ${tile("Доля топ-4", r.top4==null?"—":(r.top4*100).toFixed(1)+"%", ">60% = бизнес на 4 месяца")}
         ${tile("YoY", r.yoy==null?"—":(r.yoy>0?"+":"")+(r.yoy*100).toFixed(1)+"%", "последние 12 мес к предыдущим 12")}
         ${tile("Месяц разгона", r.ramp==null?"—":MONTHS[r.ramp], "товар приземляется на 4 недели раньше")}
+        ${tile("Доли кварталов", r.quarters ? r.quarters.map(q=>(q*100).toFixed(0)).join(" · ")+"%" : "—", "Q1–Q4 — доля спроса за год")}
       </div>
       ${verdictHTML(rv)}
       ${verdictHTML(sv)}
@@ -809,7 +817,7 @@ function render(results){
   funnel.g1 = { keyword: p1.name, amp: p1.amp, top4: p1.top4, yoy: p1.yoy,
                 consistency: p1.consistency, strength: p1.strength,
                 ramp: p1.ramp==null ? null : MONTHS[p1.ramp], months: p1.months.length,
-                index: p1.index, series: results.length };
+                index: p1.index, quarters: p1.quarters, series: results.length };
   setGate(1, ["green","yellow","red"][worst]);
   calcGate5();                       // the season phases the cash line
 }
@@ -1104,6 +1112,10 @@ function parseCerebro(rows){
   const col = {
     kw:    find(h => h.startsWith("keyword phrase")),
     sales: find(h => h.startsWith("keyword sales")),
+    click: find(h => h.startsWith("aba total click")),
+    conv:  find(h => h.startsWith("aba total conv")),
+    score: find(h => h.startsWith("competitor performance score")),
+    rankers: find(h => h.startsWith("ranking competitors")),
     sv:    find(h => h === "search volume"),
     trend: find(h => h.startsWith("search volume trend")),
     cpr:   find(h => h === "cpr"),
@@ -1128,9 +1140,18 @@ function parseCerebro(rows){
       trend: col.trend>=0 ? parseFloatCell(r[col.trend]) : null,
       cpr:   col.cpr>=0 ? parseFloatCell(r[col.cpr]) : null,
       td:    col.td>=0 ? parseFloatCell(r[col.td]) : null,
-      comp:  col.comp>=0 ? parseFloatCell(String(r[col.comp]??"").replace(/[>~]/g,"")) : null });
+      comp:  col.comp>=0 ? parseFloatCell(String(r[col.comp]??"").replace(/[>~]/g,"")) : null,
+      click: col.click>=0 ? parseFloatCell(r[col.click]) : null,
+      conv:  col.conv>=0  ? parseFloatCell(r[col.conv])  : null,
+      score: col.score>=0 ? parseFloatCell(r[col.score]) : null,
+      rankers: col.rankers>=0 ? parseFloatCell(r[col.rankers]) : null });
   }
   if (!kws.length) throw new Error("В экспорте не найдено строк с ключами.");
+  const mx = Math.max(0, ...kws.map(k=>Math.max(k.click??0, k.conv??0)));
+  if (mx > 0 && mx <= 1) kws.forEach(k => {
+    if (k.click!=null) k.click *= 100;
+    if (k.conv!=null)  k.conv  *= 100;
+  });
   return kws;
 }
 /* Cerebro's "Keyword Sales" tooltip reads: "Estimated number of weekly sales (in
@@ -1160,7 +1181,13 @@ function renderCerebro(){
     const push = k.cpr!=null ? k.cpr*(landed+disc) + spend*8 : null;
     const velRatio = (k.sales>0 && k.cpr) ? k.cpr/(k.sales*8/7) : null;
     const status = fad ? "red" : iStat;
-    return {...k, salesM, sps, intent, fad, push, velRatio, status};
+    // Real Amazon Brand Analytics data, when the export carries it. INFO only -
+    // the verdict never reads these. Gap = the top 3 win clicks but lose the
+    // sale; kill-story: auflaufform glas, +15.2 points, 2026-09-05.
+    const abaGap = (k.click!=null && k.conv!=null) ? k.click - k.conv : null;
+    const abaOpen = abaGap!=null && abaGap >= 10 && k.click >= 15;
+    const abaDefended = abaGap!=null && abaGap <= -3;
+    return {...k, salesM, sps, intent, fad, push, velRatio, status, abaGap, abaOpen, abaDefended};
   });
   const totalSalesWk = enriched.reduce((a,k)=>a+(k.sales||0),0);
   const totalSales = totalSalesWk * WEEKS_PER_MONTH;      // monthly, for P10/P90
@@ -1185,13 +1212,16 @@ function renderCerebro(){
       ${tile("Лучший ключ для запуска", best?best.kw:"—", best?("разгон ≈ €"+fmt0(best.push)):"жизнеспособного кандидата нет")}
       ${tile("Рекомендуемый P10", fmt0(totalSales*0.04*12), "доля 4% × 12 мес от месячного темпа")}
       ${tile("Рекомендуемый P90", fmt0(totalSales*0.15*12), "доля 15% × 12 мес от месячного темпа")}
+      ${enriched.some(k=>k.abaGap!=null) ? tile("Лазейки по ABA", String(enriched.filter(k=>k.abaOpen).length), "ключи, где топ-3 собирают клики, но теряют продажи") : ""}
     </div>
     <table class="checks">${enriched.map(k=>`
       <tr><td class="ic">${dot(k.status)}</td>
         <td><b>${k.kw}</b>${k.fad?' <span style="color:var(--critical);font-size:11px;font-weight:600">ХАЙП? +'+fmt0(k.trend)+'% тренд</span>':""}<br>
         <span style="color:var(--ink-2)">SV ${fmt0(k.sv)}/мес · продажи ${k.salesM==null?"—":fmt0(k.salesM)+"/мес ("+fmt0(k.sales)+"/нед)"} · ${k.sps==null?"":fmt0(k.sps)+" поисков на продажу — "}${k.intent}${
           k.velRatio!=null && k.velRatio>3 ? " · ⚠ CPR требует "+k.velRatio.toFixed(1)+"× органической 8-дневной скорости ключа — дорого удерживать" : ""}${
-          k.td!=null ? (k.td<=5 ? " · TD "+fmt0(k.td)+" — мало оптимизированных заголовков, есть лазейка" : k.td>=30 ? " · TD "+fmt0(k.td)+" — заголовки перенасыщены" : "") : ""}</span></td>
+          k.td!=null ? (k.td<=5 ? " · TD "+fmt0(k.td)+" — мало оптимизированных заголовков, есть лазейка" : k.td>=30 ? " · TD "+fmt0(k.td)+" — заголовки перенасыщены" : "") : ""}${
+          k.abaGap!=null ? " · ABA клики "+k.click.toFixed(1)+"% / покупки "+k.conv.toFixed(1)+"%"+(k.abaOpen ? " — топ-3 собирают клики, но ТЕРЯЮТ продажу (лазейка)" : k.abaDefended ? " — топ-3 конвертируют лучше, чем кликаются (защищено)" : "") : ""}${
+          k.score!=null ? " · счёт конкурентов "+k.score.toFixed(1)+"/10"+(k.score>=5 ? " (ядро сравниваемого набора)" : "") : ""}</span></td>
         <td class="val">${k.push==null?"—":"CPR "+fmt0(k.cpr)+" · разгон €"+fmt0(k.push)}</td></tr>`).join("")}
     </table>
     ${verdictHTML(!canJudge ? ["warning","НЕЧЕМ СУДИТЬ — В ФАЙЛЕ НЕТ CPR","Ни у одного ключа в файле нет CPR, поэтому цену разгона на страницу 1 посчитать не из чего. Это ничего не говорит о нише — это нехватка данных. Выгрузите таблицу ключей из Cerebro, там CPR есть."]

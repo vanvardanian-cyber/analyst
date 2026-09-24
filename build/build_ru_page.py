@@ -609,6 +609,19 @@ t('tile("Order: contribution if all sell", "€"+fmt0(cm*qty), qty+" sets × €
 t('tile("Order: after tax reserve", "€"+fmt0(cmAfter*qty), "what a fully sold order leaves you")',
   'tile("Заказ: после резерва на налог", "€"+fmt0(cmAfter*qty), "что оставляет полностью проданный заказ")')
 
+t('${tile("Quarter shares", r.quarters ? r.quarters.map(q=>(q*100).toFixed(0)).join(" · ")+"%" : "—", "Q1–Q4 share of the year\'s demand")}',
+  '${tile("Доли кварталов", r.quarters ? r.quarters.map(q=>(q*100).toFixed(0)).join(" · ")+"%" : "—", "Q1–Q4 — доля спроса за год")}')
+t('" — top 3 win clicks but LOSE the sale (opening)"', '" — топ-3 собирают клики, но ТЕРЯЮТ продажу (лазейка)"')
+t('" — top 3 convert better than they click (defended)"', '" — топ-3 конвертируют лучше, чем кликаются (защищено)"')
+t('" · ABA clicks "', '" · ABA клики "')
+t('"% / buys "', '"% / покупки "')
+t('" (core of the compared set)"', '" (ядро сравниваемого набора)"')
+t('" · comp score "', '" · счёт конкурентов "')
+t('${enriched.some(k=>k.abaGap!=null) ? tile("ABA openings", String(enriched.filter(k=>k.abaOpen).length), "keywords where the top 3 win clicks but lose sales") : ""}',
+  '${enriched.some(k=>k.abaGap!=null) ? tile("Лазейки по ABA", String(enriched.filter(k=>k.abaOpen).length), "ключи, где топ-3 собирают клики, но теряют продажи") : ""}')
+t('<b>Gate 1 quarter shares &amp; Gate 4 ABA columns:</b> the quarter-shares tile is the monthly profile summed per calendar quarter — display arithmetic, no new threshold. When a Cerebro export carries Amazon Brand Analytics columns, Gate 4 prints them per keyword: the top-3 click share vs conversion share (a gap of ≥10 points with ≥15% clicks is flagged as an opening — the top listings attract clicks but lose the sale; kill-story: "auflaufform glas", +15.2 points, found 2026-09-05) and the Competitor Performance Score of the ASINs the search was run with (≥5 = a core keyword of that compared set — the score is relative to those ASINs, not to the market). All of these are information; no verdict reads them.',
+  '<b>Доли кварталов (Этап 1) и колонки ABA (Этап 4):</b> плитка долей кварталов — это месячный профиль, сложенный по календарным кварталам: чистая арифметика, без новых порогов. Если экспорт Cerebro содержит колонки Amazon Brand Analytics, Этап 4 печатает их по каждому ключу: доля кликов против доли покупок у топ-3 (разрыв ≥10 пунктов при кликах ≥15% помечается как лазейка — верхние листинги собирают клики, но теряют продажу; kill-story: «auflaufform glas», +15,2 пункта, найдено 05.09.2026) и Competitor Performance Score введённых в поиск ASIN (≥5 = ключ из ядра этого набора; счёт относителен к этим ASIN, а не к рынку). Всё это — справочная информация; вердикты её не читают.')
+
 # ---------- apply ----------
 missing = []
 for old, new, n in P:
